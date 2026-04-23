@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Book Crawl 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#1B1B1B;--ink-60:#767676;--ink-40:#A4A4A4;--ink-20:#D1D1D1;--ink-10:#E8E8E8;
+  --cream:#F7F5F3;--lime:#EEF4A9;--lime-dark:#5F6244;
+  --must:#E24B4A;--nice:#EF9F27;--bonus:#639922;
+  --must-bg:#FCEBEB;--nice-bg:#FAEEDA;--bonus-bg:#EAF3DE;
+  --edit-bg:#1a7f4b;--r:12px;--rs:8px
+}
+html{font-size:16px;background:var(--cream)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--cream);min-height:100vh;padding-bottom:40px}
+body.modal-open{position:fixed;width:100%;overflow:hidden}
+
+/* header */
+.sticky-head{position:sticky;top:0;z-index:100;background:var(--ink);padding:16px 20px 12px}
+.app-title{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lime);margin-bottom:12px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:rgba(255,255,255,.07);border-radius:var(--rs);padding:8px 6px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:#fff;display:block;line-height:1;margin-bottom:3px}
+.stat-label{font-size:10px;color:var(--ink-40);text-transform:uppercase;letter-spacing:.04em}
+.stat.hi .stat-num{color:var(--lime)}
+.search-input{width:100%;height:44px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:var(--rs);padding:0 14px;font-size:16px;color:#fff;outline:none;-webkit-appearance:none}
+.search-input::placeholder{color:var(--ink-40)}
+.search-input:focus{border-color:var(--lime)}
+
+/* filter chips */
+.filter-chips{background:var(--ink);padding:0 20px 12px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filter-chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:32px;padding:0 14px;border-radius:99px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--ink-40);font-size:13px;cursor:pointer;white-space:nowrap;-webkit-appearance:none}
+.chip.a-all{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.chip.a-must{background:var(--must-bg);color:var(--must);border-color:var(--must)}
+.chip.a-nice{background:var(--nice-bg);color:#7a5200;border-color:var(--nice)}
+.chip.a-bonus{background:var(--bonus-bg);color:#2d4d0a;border-color:var(--bonus)}
+.chip.a-found{background:var(--lime);color:var(--lime-dark);border-color:var(--lime-dark)}
+.chip.a-unfound{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* content */
+.content{padding:16px 16px 0}
+
+/* view toggle */
+.view-toggle{display:flex;background:var(--ink-10);border-radius:10px;padding:3px;margin-bottom:14px;gap:3px}
+.vtab{flex:1;height:36px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--ink-60);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-appearance:none;transition:all .15s}
+.vtab svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.vtab.active{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* top bar */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.add-book-btn{width:32px;height:32px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.add-book-btn svg{width:16px;height:16px;fill:none;stroke:var(--lime);stroke-width:2.5;stroke-linecap:round}
+.how-to-btn{display:flex;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;font-size:12px;color:var(--ink-60)}
+.info-i{display:inline-flex;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-40);align-items:center;justify-content:center;font-size:9px;font-style:italic;font-weight:700;color:var(--ink-60);flex-shrink:0}
+
+/* store sections */
+.store-section{background:#fff;border-radius:var(--r);margin-bottom:12px;overflow:hidden;border:1px solid var(--ink-10);transition:opacity .15s}
+.store-section.dragging{opacity:.3}
+.store-section.drag-over-top{border-top:2px solid var(--lime-dark)}
+.store-section.drag-over-bottom{border-bottom:2px solid var(--lime-dark)}
+.store-header{display:flex;align-items:center;padding:14px 16px;gap:10px;min-height:56px}
+.drag-handle{width:32px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--ink-40);flex-shrink:0;margin:-10px 0 -10px -10px;cursor:grab;touch-action:none}
+.drag-handle svg{width:16px;height:14px;fill:var(--ink-40)}
+.store-tap{display:flex;align-items:center;flex:1;gap:8px;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:0}
+.store-name-group{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.store-name{font-size:16px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-info-btn{background:none;border:none;padding:2px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.store-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.chevron{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--ink-40);transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(180deg)}
+.chevron svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.store-progress{height:3px;background:var(--ink-10)}
+.store-progress-bar{height:100%;background:var(--lime);transition:width .3s}
+.store-books{display:none}.store-books.open{display:block}
+
+/* drag ghost */
+.drag-ghost{position:fixed;left:16px;right:16px;background:#fff;border-radius:var(--r);border:1.5px solid var(--lime-dark);padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.drag-ghost svg{width:16px;height:14px;fill:var(--ink-40)}
+.drag-ghost-name{font-size:16px;font-weight:700;color:var(--ink)}
+
+/* swipe rows (shared between both views) */
+.swipe-wrap{position:relative;overflow:hidden;border-top:1px solid var(--ink-10)}
+.swipe-bg{position:absolute;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center}
+.swipe-bg svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.swipe-bg-edit{left:0;background:var(--edit-bg)}
+.swipe-bg-del{right:0;background:var(--must)}
+.book-row{position:relative;background:#fff;display:flex;align-items:flex-start;padding:12px 16px;gap:10px;will-change:transform;-webkit-user-select:none;user-select:none}
+.book-row.animating{transition:transform .22s ease}
+.book-row.found .priority-indicator,
+.book-row.found .check-tap,
+.book-row.found .book-info,
+.book-row.found .priority-select,
+.book-row.found .store-select{opacity:.4}
+.priority-indicator{width:3px;align-self:stretch;border-radius:99px;flex-shrink:0;min-height:20px}
+.pi-must{background:var(--must)}.pi-nice{background:var(--nice)}.pi-bonus{background:var(--bonus)}
+.check-tap{width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin:-10px -4px -10px -10px}
+.checkbox{width:24px;height:24px;border:2px solid var(--ink-20);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;transition:all .15s}
+.checkbox.checked{background:var(--ink);border-color:var(--ink)}
+.check-icon{display:none}
+.checkbox.checked .check-icon{display:block}
+.check-icon svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.book-info{flex:1;min-width:0;padding-top:1px}
+.book-title{font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:2px}
+.book-author{font-size:13px;color:var(--ink-60);margin-bottom:3px}
+.book-genre{font-size:11px;color:var(--ink-40);text-transform:uppercase;letter-spacing:.04em}
+
+/* priority select (stores view) */
+.priority-select{font-size:12px;border:1px solid var(--ink-10);border-radius:6px;padding:5px 20px 5px 7px;background:var(--cream);color:#494949;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center;min-height:32px;min-width:78px;margin-top:2px}
+.p-must{border-color:var(--must)!important;color:var(--must)!important;background-color:var(--must-bg)!important}
+.p-nice{border-color:var(--nice)!important;color:#7a5200!important;background-color:var(--nice-bg)!important}
+.p-bonus{border-color:var(--bonus)!important;color:#2d4d0a!important;background-color:var(--bonus-bg)!important}
+
+/* store select (books view) */
+.store-select{font-size:11px;border:1px solid var(--ink-10);border-radius:6px;padding:5px 18px 5px 7px;background:var(--cream);color:var(--ink-60);cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center;min-height:32px;min-width:90px;max-width:110px;margin-top:2px;line-height:1.3}
+.store-select.s-found{border-color:var(--edit-bg)!important;color:var(--edit-bg)!important;background-color:#e0f2ea!important}
+
+/* books view list */
+.books-view-wrap{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--ink-10)}
+.books-view-wrap .swipe-wrap:first-child{border-top:none}
+
+/* empty */
+.empty{text-align:center;padding:48px 20px;color:var(--ink-60);font-size:15px}
+
+/* book modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none}
+.modal-overlay.open{display:block}
+.modal{position:fixed;top:72px;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:20px;padding-bottom:max(48px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .35s cubic-bezier(.32,.72,0,1);will-change:transform;z-index:201}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--ink-20);border-radius:99px;margin:0 auto 20px}
+.modal-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:20px}
+.form-field{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--ink-60);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.form-input{width:100%;height:44px;border:1px solid var(--ink-20);border-radius:var(--rs);padding:0 12px;font-size:16px;color:var(--ink);background:#fff;outline:none;-webkit-appearance:none}
+.form-input:focus{border-color:var(--ink)}
+.priority-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ptab{height:40px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;font-size:13px;font-weight:600;color:var(--ink-60);cursor:pointer;-webkit-appearance:none}
+.ptab.sel-must{background:var(--must-bg);border-color:var(--must);color:var(--must)}
+.ptab.sel-nice{background:var(--nice-bg);border-color:var(--nice);color:#7a5200}
+.ptab.sel-bonus{background:var(--bonus-bg);border-color:var(--bonus);color:#2d4d0a}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.store-toggle{padding:10px 12px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;font-size:13px;color:var(--ink-60);cursor:pointer;text-align:left;-webkit-appearance:none;line-height:1.3}
+.store-toggle.sel{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.btn-cancel{height:48px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;color:var(--ink-60);font-size:15px;cursor:pointer;-webkit-appearance:none}
+.btn-submit{height:48px;border-radius:var(--rs);border:none;background:var(--ink);color:var(--lime);font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+.btn-submit:active{opacity:.8}.btn-cancel:active{background:var(--ink-10)}
+
+/* info modal */
+.info-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:75vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:20px;padding-bottom:max(40px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .35s cubic-bezier(.32,.72,0,1);will-change:transform;z-index:201}
+.modal-overlay.open .info-modal{transform:translateY(0)}
+.si-store-name{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.2}
+.si-row{margin-bottom:16px}
+.si-label{font-size:11px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.si-value{font-size:15px;color:var(--ink-60);line-height:1.5}
+.si-value a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink-20)}
+.si-note{margin-top:20px;background:var(--lime);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--lime-dark);font-weight:600;line-height:1.5}
+.howto-section{margin-bottom:22px}
+.howto-section:last-child{margin-bottom:0}
+.howto-heading{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.howto-body{font-size:14px;color:var(--ink-60);line-height:1.6;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.howto-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:var(--ink-10);flex-shrink:0}
+.howto-icon svg{width:14px;height:14px}
+.store-visited-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.visited-circle{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink-40);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.visited-circle.checked{background:var(--edit-bg);border-color:var(--edit-bg)}
+.visited-circle svg{display:none}
+.visited-circle.checked svg{display:block}
+.view-subtitle{font-size:14px;font-weight:500;color:var(--ink-60);margin-bottom:12px;padding:0 2px}
+.list-divider{height:1px;background:var(--ink-10);margin-bottom:14px}
+.store-list-header{display:flex;align-items:center;padding:0 16px 10px 16px;gap:10px}
+.slh-name{font-size:10px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.slh-action{font-size:10px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;margin-right:28px}
+</style>
+</head>
+<body>
+
+<div class="sticky-head">
+  <div class="app-title">Book Crawl 2026</div>
+  <div class="stats-row">
+    <div class="stat hi"><span class="stat-num" id="stat-found">0</span><span class="stat-label">Found</span></div>
+    <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total</span></div>
+    <div class="stat"><span class="stat-num" id="stat-must">0</span><span class="stat-label">Must left</span></div>
+    <div class="stat"><span class="stat-num" id="stat-stores">0</span><span class="stat-label">Stores left</span></div>
+  </div>
+  <input class="search-input" type="search" id="search" placeholder="Search books or authors..." autocorrect="off" autocapitalize="off" oninput="applyFilter()">
+</div>
+
+<div class="filter-chips">
+  <button class="chip a-all" data-f="all" onclick="setFilter('all')">All</button>
+  <button class="chip" data-f="must" onclick="setFilter('must')">Must-have</button>
+  <button class="chip" data-f="nice" onclick="setFilter('nice')">Nice to find</button>
+  <button class="chip" data-f="bonus" onclick="setFilter('bonus')">Bonus</button>
+  <button class="chip" data-f="found" onclick="setFilter('found')">Found</button>
+  <button class="chip" data-f="unfound" onclick="setFilter('unfound')">Not found</button>
+</div>
+
+<div class="content">
+  <div class="view-toggle">
+    <button class="vtab active" id="vtab-stores" onclick="setView('stores')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11h14v10"/><path d="M9 21v-5h6v5"/></svg>
+      By stores
+    </button>
+    <button class="vtab" id="vtab-books" onclick="setView('books')">
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      By books
+    </button>
+  </div>
+  <div id="view-subtitle" class="view-subtitle">Books likely to be found at this store</div>
+  <div class="top-bar">
+    <button class="how-to-btn" onclick="showHowTo()">
+      <span class="info-i">i</span>
+      <span>How to use</span>
+    </button>
+    <button class="add-book-btn" onclick="openModal()" aria-label="Add book">
+      <svg viewBox="0 0 18 18"><line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/></svg>
+    </button>
+  </div>
+  <div class="list-divider" id="list-divider"></div>
+  <div class="store-list-header" id="store-list-header">
+    <div class="slh-name">Bookstore</div>
+    <div class="slh-action">Found something else</div>
+  </div>
+  <div id="store-list"></div>
+  <div class="empty" id="empty-state" style="display:none">No books match your filter.</div>
+</div>
+
+<!-- book add/edit modal -->
+<div class="modal-overlay" id="book-overlay" onclick="bookOverlayClick(event)">
+  <div class="modal" id="book-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Add a book</div>
+    <div class="form-field"><label class="form-label">Title</label><input class="form-input" id="f-title" type="text" placeholder="Book title" autocorrect="off"></div>
+    <div class="form-field"><label class="form-label">Author</label><input class="form-input" id="f-author" type="text" placeholder="Author name" autocorrect="off"></div>
+    <div class="form-field"><label class="form-label">Genre</label><input class="form-input" id="f-genre" type="text" placeholder="e.g. Literary Fiction" autocorrect="off"></div>
+    <div class="form-field">
+      <label class="form-label">Priority</label>
+      <div class="priority-tabs">
+        <button class="ptab sel-must" data-p="must" onclick="selectPriority('must')">Must</button>
+        <button class="ptab" data-p="nice" onclick="selectPriority('nice')">Nice</button>
+        <button class="ptab" data-p="bonus" onclick="selectPriority('bonus')">Bonus</button>
+      </div>
+    </div>
+    <div class="form-field"><label class="form-label">Likely to be found at</label><div class="store-grid" id="store-grid"></div></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBookModal()">Cancel</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitBook()">Add book</button>
+    </div>
+  </div>
+</div>
+
+<!-- info modal -->
+<div class="modal-overlay" id="info-overlay" onclick="infoOverlayClick(event)">
+  <div class="info-modal" id="info-modal">
+    <div class="modal-handle"></div>
+    <div id="info-modal-content"></div>
+  </div>
+</div>
+
+<script>
+const STORE_DEFS=[
+  {id:"camino",       name:"Camino Books",              type:"new",  label:"New"},
+  {id:"ucsd",         name:"UCSD Bookstore",             type:"new",  label:"New"},
+  {id:"warwicks",     name:"Warwick\u2019s",              type:"new",  label:"New"},
+  {id:"birdrock",     name:"Bird Rock Bookshop",         type:"new",  label:"New"},
+  {id:"bookplace",    name:"The Book Place",             type:"used", label:"Used"},
+  {id:"meetcute",     name:"Meet Cute",                  type:"new",  label:"New"},
+  {id:"libelula",     name:"Lib\u00e9lula",              type:"new",  label:"New"},
+  {id:"baybooks",     name:"Bay Books Coronado",         type:"new",  label:"New"},
+  {id:"mystgalaxy",   name:"Mysterious Galaxy",          type:"new",  label:"New"},
+  {id:"laplaya",      name:"La Playa Books",             type:"both", label:"New +<br>Used"},
+  {id:"libraryshop",  name:"Library Shop Mission Hills", type:"new",  label:"New"},
+  {id:"libraryshopsd",name:"Library Shop SD",            type:"new",  label:"New"},
+  {id:"bluestocking", name:"Bluestocking Books",         type:"both", label:"New +<br>Used"},
+  {id:"verbatim",     name:"Verbatim Books",             type:"both", label:"New +<br>Used"},
+  {id:"bookcatapult", name:"The Book Catapult",          type:"new",  label:"New"},
+  {id:"heybooks",     name:"Hey Books!",                 type:"both", label:"New +<br>Used"},
+];
+
+const LIB_NOTE=`<div class="si-note">You only need to visit one of the two Library Shop locations to get your stamp!</div>`;
+const STORE_INFO={
+  camino:        {hours:"Sat. 8am-8pm, Sun. 10am-6pm, Mon. 10am-8pm",         phone:"(858) 925-7078",tel:"+18589257078",address:"1555 Camino Del Mar, Suite 114 Del Mar Plaza, Del Mar, CA 92014"},
+  ucsd:          {hours:"Sat. & Sun. 9am-4pm, Mon. 8am-6pm",                  phone:"(858) 534-3149",tel:"+18585343149",address:"9500 Gilman Dr. in the Price Center, La Jolla, CA 92093"},
+  warwicks:      {hours:"Sat. & Mon. 9am-6pm, Sun. 10am-5:30pm",              phone:"(858) 454-0347",tel:"+18584540347",address:"7812 Girard Ave., La Jolla, CA 92037"},
+  birdrock:      {hours:"Sat. 9am-6pm, Sun. 10am-5pm, Mon. 9am-6pm",          phone:"(317) 289-7569",tel:"+13172897569",address:"5604 La Jolla Blvd., #B, La Jolla, CA 92037"},
+  bookplace:     {hours:"Sat., Sun., & Mon. 10am-5pm",                         phone:"(619) 492-4200",tel:"+16194924200",address:"6122 Lake Murray Blvd., La Mesa, CA 91942"},
+  meetcute:      {hours:"Sat. & Sun. 10am-7pm, Mon. 11am-5pm",                phone:"(619) 439-7707",tel:"+16194397707",address:"8235 La Mesa Blvd., La Mesa, CA 91942"},
+  libelula:      {hours:"Sat. 8am-6pm, Sun. 9am-6pm, Mon. 10am-6pm",          phone:"(619) 775-4040",tel:"+16197754040",address:"950 South 26th St., San Diego, CA 92113"},
+  baybooks:      {hours:"Sat. 9am-7pm, Sun. 9am-6pm, Mon. 9am-7pm",           phone:"(619) 435-0070",tel:"+16194350070",address:"1007 Orange Ave. Coronado, CA 92118"},
+  mystgalaxy:    {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-7pm",                 phone:"(619) 539-7137",tel:"+16195397137",address:"3555 Rosecrans Suite 107A, San Diego, CA 92110"},
+  laplaya:       {hours:"Sat. & Sun. 9am-6pm, Mon. 10am-6pm",                 phone:"(619) 226-2601",tel:"+16192262601",address:"1026 Rosecrans St., San Diego, CA 92106"},
+  libraryshop:   {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-6pm",                 phone:"(619) 782-7541",tel:"+16197827541",address:"925 W. Washington St., San Diego, CA 92103",note:true},
+  libraryshopsd: {hours:"Sat. 9:30am-6pm, Sun. 11am-6pm, Mon. 11:30am-6pm",  phone:"(619) 236-5802",tel:"+16192365802",address:"330 Park Blvd., San Diego, CA 92101",note:true},
+  bluestocking:  {hours:"Sat. 10am-7pm, Sun. 10am-6pm, Mon. 11am-6pm",        phone:"(619) 296-1424",tel:"+16192961424",address:"3817 Fifth Ave., San Diego, CA 92103"},
+  verbatim:      {hours:"Sat. 10am-7pm, Sun. & Mon. 10am-6pm",                phone:"(619) 501-7466",tel:"+16195017466",address:"3793 30th St., San Diego, CA 92104"},
+  bookcatapult:  {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-6pm",                 phone:"(619) 795-3780",tel:"+16197953780",address:"3010-B Juniper St., San Diego, CA 92104"},
+  heybooks:      {hours:"Sat. & Sun. 9am-8pm, Mon. 10am-6pm",                 phone:"(619) 693-4462",tel:"+16196934462",address:"921 E St., San Diego, CA 92120"},
+};
+
+const DEFAULT_BOOKS=[];
+
+let books=[],openStores=new Set(),storeOrder=[],manuallyVisitedStores=new Set(),nextId=23,cf='all',currentView='stores',editingBookId=null,activeSwipeRow=null;
+const PRIO={must:0,nice:1,bonus:2};
+const BARS_SVG=`<svg viewBox="0 0 16 14"><rect y="0" width="16" height="2" rx="1"/><rect y="6" width="16" height="2" rx="1"/><rect y="12" width="16" height="2" rx="1"/></svg>`;
+const PENCIL_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const TRASH_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+const PLUS_SVG=`<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/></svg>`;
+const CHECK=`<svg viewBox="0 0 13 10"><polyline points="1,5 5,9 12,1"/></svg>`;
+
+function lastName(a){return a.split('&')[0].trim().split(/\s+/).pop().toLowerCase();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function computeVisitedStores(){const fb=new Set(books.filter(b=>b.found&&b.foundAt).map(b=>b.foundAt));return new Set([...fb,...manuallyVisitedStores]);}
+
+function sortedBooksForStore(sid){
+  return books.filter(b=>b.stores.includes(sid))
+    .sort((a,b)=>PRIO[a.priority]-PRIO[b.priority]||lastName(a.author).localeCompare(lastName(b.author)));
+}
+function allBooksSorted(){
+  const uniq=new Map();books.forEach(b=>uniq.set(b.id,b));
+  return [...uniq.values()].sort((a,b)=>PRIO[a.priority]-PRIO[b.priority]||lastName(a.author).localeCompare(lastName(b.author)));
+}
+
+function save(){
+  localStorage.setItem('bc26v5-books-cousin',JSON.stringify(books));
+  localStorage.setItem('bc26v5-nextid-cousin',nextId);
+  localStorage.setItem('bc26v5-order-cousin',JSON.stringify(storeOrder));
+  localStorage.setItem('bc26v5-view-cousin',currentView);
+  localStorage.setItem('bc26v5-manual-cousin',JSON.stringify([...manuallyVisitedStores]));
+}
+function load(){
+  const sb=localStorage.getItem('bc26v5-books-cousin');
+  const si=localStorage.getItem('bc26v5-nextid-cousin');
+  const so=localStorage.getItem('bc26v5-order-cousin');
+  const sv=localStorage.getItem('bc26v5-view-cousin');
+  const sm=localStorage.getItem('bc26v5-manual-cousin');
+  books=sb?JSON.parse(sb).map(b=>({foundAt:null,...b})):JSON.parse(JSON.stringify(DEFAULT_BOOKS));
+  nextId=si?parseInt(si):0;
+  currentView=sv||'stores';
+  const saved=so?JSON.parse(so):null;
+  if(saved){storeOrder=saved;STORE_DEFS.forEach(s=>{if(!storeOrder.includes(s.id))storeOrder.push(s.id);});}
+  else storeOrder=STORE_DEFS.map(s=>s.id);
+  manuallyVisitedStores=sm?new Set(JSON.parse(sm)):new Set();
+  openStores=new Set();
+}
+function orderedStores(){return storeOrder.map(id=>STORE_DEFS.find(s=>s.id===id)).filter(Boolean);}
+
+// ── Shared book row builder for stores view ──
+function bookRowHTMLStore(b,sid){
+  const pc='pi-'+b.priority,sc='p-'+b.priority;
+  const chk=b.found?' checked':'',fd=b.found?' found':'';
+  const sm=b.priority==='must'?' selected':'',sn=b.priority==='nice'?' selected':'',sb2=b.priority==='bonus'?' selected':'';
+  return `<div class="swipe-wrap" data-id="${b.id}" data-store="${sid}">
+<div class="swipe-bg swipe-bg-edit" onclick="handleEdit(${b.id})">${PENCIL_SVG}</div>
+<div class="swipe-bg swipe-bg-del" onclick="handleDelete(${b.id})">${TRASH_SVG}</div>
+<div class="book-row${fd}" data-id="${b.id}" data-store="${sid}">
+<div class="priority-indicator ${pc}"></div>
+<div class="check-tap" onclick="toggleFoundStore(${b.id},'${sid}')"><div class="checkbox${chk}"><span class="check-icon">${CHECK}</span></div></div>
+<div class="book-info"><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author)}</div><div class="book-genre">${esc(b.genre)}</div></div>
+<select class="priority-select ${sc}" onchange="changePriority(${b.id},this.value)"><option value="must"${sm}>Must</option><option value="nice"${sn}>Nice</option><option value="bonus"${sb2}>Bonus</option></select>
+</div></div>`;
+}
+
+// ── Book row builder for books view ──
+function bookRowHTMLBooks(b){
+  const pc='pi-'+b.priority;
+  const chk=b.found?' checked':'',fd=b.found?' found':'';
+  const sc=b.foundAt?' s-found':'';
+  const storeOptions=STORE_DEFS.map(s=>`<option value="${s.id}"${b.foundAt===s.id?' selected':''}>${s.name}</option>`).join('');
+  return `<div class="swipe-wrap" data-id="${b.id}" data-store="">
+<div class="swipe-bg swipe-bg-edit" onclick="handleEdit(${b.id})">${PENCIL_SVG}</div>
+<div class="swipe-bg swipe-bg-del" onclick="handleDelete(${b.id})">${TRASH_SVG}</div>
+<div class="book-row${fd}" data-id="${b.id}">
+<div class="priority-indicator ${pc}"></div>
+<div class="check-tap" onclick="toggleFoundBooks(${b.id})"><div class="checkbox${chk}"><span class="check-icon">${CHECK}</span></div></div>
+<div class="book-info"><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author)}</div><div class="book-genre">${esc(b.genre)}</div></div>
+<select class="store-select${sc}" onchange="setFoundAt(${b.id},this.value)">
+<option value="">Store purchased</option>
+${storeOptions}
+</select>
+</div></div>`;
+}
+
+// ── Render ──
+function render(){
+  if(currentView==='stores') renderStoresView();
+  else renderBooksView();
+  updateStats();
+}
+
+function filterBooks(list){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  return list.filter(b=>{
+    if(q&&!b.title.toLowerCase().includes(q)&&!b.author.toLowerCase().includes(q))return false;
+    if(cf==='must')return b.priority==='must';
+    if(cf==='nice')return b.priority==='nice';
+    if(cf==='bonus')return b.priority==='bonus';
+    if(cf==='found')return b.found;
+    if(cf==='unfound')return !b.found;
+    return true;
+  });
+}
+
+function renderStoresView(){
+  document.getElementById('list-divider').style.display='block';
+  document.getElementById('store-list-header').style.display='flex';
+  const container=document.getElementById('store-list');
+  let html='',any=false;
+  orderedStores().forEach(s=>{
+    const sb=filterBooks(sortedBooksForStore(s.id));
+    any=true;
+    const fc=sb.filter(b=>b.found).length,tot=sb.length,rem=tot-fc;
+    const pct=tot?(fc/tot)*100:0,isOpen=openStores.has(s.id),isManuallyVisited=manuallyVisitedStores.has(s.id);
+    html+=`<div class="store-section" id="store-${s.id}" data-sid="${s.id}">
+<div class="store-header">
+<div class="drag-handle" data-sid="${s.id}">${BARS_SVG}</div>
+<div class="store-tap" onclick="toggleStore('${s.id}')">
+<div class="store-name-group"><div class="store-name">${esc(s.name)}</div>
+<button class="store-info-btn" onclick="showStoreInfo(event,'${s.id}')"><span class="info-i">i</span></button></div>
+<div class="store-right"><button class="store-visited-btn" onclick="toggleManuallyVisited(event,'${s.id}')" aria-label="Mark store as visited"><div class="visited-circle${isManuallyVisited?' checked':''}"><svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 4,8 11,1"/></svg></div></button>
+<div class="chevron${isOpen?' open':''}" id="chev-${s.id}"><svg viewBox="0 0 14 8"><polyline points="1,1 7,7 13,1"/></svg></div>
+</div></div></div>
+<div class="store-progress"><div class="store-progress-bar" style="width:${pct}%"></div></div>
+<div class="store-books${isOpen?' open':''}" id="books-${s.id}">${sb.map(b=>bookRowHTMLStore(b,s.id)).join('')}</div>
+</div>`;
+  });
+  container.innerHTML=html;
+  document.getElementById('empty-state').style.display=any?'none':'block';
+  activeSwipeRow=null;
+  initSwipe();
+  initDrag();
+}
+
+function renderBooksView(){
+  document.getElementById('list-divider').style.display='none';
+  document.getElementById('store-list-header').style.display='none';
+  const container=document.getElementById('store-list');
+  const sb=filterBooks(allBooksSorted());
+  if(!sb.length){container.innerHTML='';document.getElementById('empty-state').style.display='block';return;}
+  document.getElementById('empty-state').style.display='none';
+  container.innerHTML=`<div class="books-view-wrap">${sb.map(b=>bookRowHTMLBooks(b)).join('')}</div>`;
+  activeSwipeRow=null;
+  initSwipe();
+}
+
+function updateStats(){
+  const uniq=new Map();books.forEach(b=>uniq.set(b.id,b));const all=[...uniq.values()];
+  const found=all.filter(b=>b.found).length;
+  const mustLeft=all.filter(b=>!b.found&&b.priority==='must').length;
+  const visited=computeVisitedStores();
+  const libraryVisited=visited.has('libraryshop')||visited.has('libraryshopsd');
+  const otherLeft=['camino','ucsd','warwicks','birdrock','bookplace','meetcute','libelula','baybooks','mystgalaxy','laplaya','bluestocking','verbatim','bookcatapult','heybooks'].filter(id=>!visited.has(id)).length;
+  const storesLeft=otherLeft+(libraryVisited?0:1);
+  document.getElementById('stat-found').textContent=found;
+  document.getElementById('stat-total').textContent=all.length;
+  document.getElementById('stat-must').textContent=mustLeft;
+  document.getElementById('stat-stores').textContent=storesLeft;
+}
+
+// ── Interactions ──
+function toggleManuallyVisited(e,sid){e.stopPropagation();if(manuallyVisitedStores.has(sid))manuallyVisitedStores.delete(sid);else manuallyVisitedStores.add(sid);save();render();}
+function setView(v){
+  currentView=v;
+  document.getElementById('vtab-stores').classList.toggle('active',v==='stores');
+  document.getElementById('vtab-books').classList.toggle('active',v==='books');
+  document.getElementById('view-subtitle').textContent=v==='stores'?'Books likely to be found at this store':'My book wish list';
+  save();render();
+}
+
+function closeActiveSwipe(){
+  if(!activeSwipeRow)return;
+  const row=activeSwipeRow.querySelector('.book-row');
+  if(row){row.classList.add('animating');row.style.transform='';setTimeout(()=>row.classList.remove('animating'),220);}
+  activeSwipeRow=null;
+}
+function handleDelete(id){closeActiveSwipe();books=books.filter(b=>b.id!==id);save();render();}
+function handleEdit(id){closeActiveSwipe();openEditModal(id);}
+
+function toggleFoundStore(id,sid){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  b.found=!b.found;
+  b.foundAt=b.found?sid:null;
+  save();render();
+}
+
+function toggleFoundBooks(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  b.found=!b.found;
+  if(!b.found)b.foundAt=null;
+  save();render();
+}
+
+function setFoundAt(id,storeId){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  if(storeId){b.found=true;b.foundAt=storeId;}
+  else{b.found=false;b.foundAt=null;}
+  save();render();
+}
+
+function changePriority(id,val){const b=books.find(x=>x.id===id);if(!b)return;b.priority=val;save();render();}
+
+function toggleStore(id){
+  if(openStores.has(id))openStores.delete(id);else openStores.add(id);
+  const el=document.getElementById('books-'+id),chev=document.getElementById('chev-'+id);
+  if(el)el.classList.toggle('open');if(chev)chev.classList.toggle('open');
+}
+function setFilter(f){cf=f;document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f===f)c.classList.add('a-'+f);});render();}
+function applyFilter(){render();}
+
+// ── Swipe ──
+function initSwipe(){
+  document.querySelectorAll('.swipe-wrap').forEach(wrap=>{
+    const row=wrap.querySelector('.book-row');
+    let sx=0,sy=0,dx=0,decided=false,horiz=false,open=false;
+    wrap.addEventListener('touchstart',e=>{
+      if(activeSwipeRow&&activeSwipeRow!==wrap)closeActiveSwipe();
+      sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;decided=false;horiz=false;
+      open=row.classList.contains('slide-left')||row.classList.contains('slide-right');
+      if(open)dx=row.classList.contains('slide-left')?-80:80;
+      row.classList.remove('animating');
+    },{passive:true});
+    wrap.addEventListener('touchmove',e=>{
+      const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+      const adx=Math.abs(cx-sx),ady=Math.abs(cy-sy);
+      if(!decided&&(adx>5||ady>5)){decided=true;horiz=adx>ady*1.2;}
+      if(!horiz)return;
+      e.preventDefault();
+      row.style.transform=`translateX(${Math.max(-80,Math.min(80,(cx-sx)+(open?dx:0)))}px)`;
+    },{passive:false});
+    wrap.addEventListener('touchend',e=>{
+      if(!horiz)return;
+      const raw=(e.changedTouches[0].clientX-sx)+(open?dx:0);
+      row.classList.add('animating');
+      if(raw<-45){row.style.transform='translateX(-80px)';row.classList.remove('slide-right');row.classList.add('slide-left');activeSwipeRow=wrap;}
+      else if(raw>45){row.style.transform='translateX(80px)';row.classList.remove('slide-left');row.classList.add('slide-right');activeSwipeRow=wrap;}
+      else{row.style.transform='';row.classList.remove('slide-left','slide-right');activeSwipeRow=null;}
+      setTimeout(()=>row.classList.remove('animating'),220);
+    },{passive:true});
+  });
+  document.getElementById('store-list').addEventListener('touchstart',e=>{
+    if(activeSwipeRow&&!activeSwipeRow.contains(e.target))closeActiveSwipe();
+  },{passive:true});
+}
+
+// ── Drag to reorder ──
+function initDrag(){
+  const container=document.getElementById('store-list');
+  let ghost=null,dragSid=null,overSid=null;
+  function getSections(){return[...container.querySelectorAll('.store-section')];}
+  function removeGhost(){if(ghost){ghost.remove();ghost=null;}}
+  function clearOver(){getSections().forEach(s=>s.classList.remove('drag-over-top','drag-over-bottom'));}
+  container.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.addEventListener('touchstart',e=>{
+      e.stopPropagation();
+      dragSid=handle.dataset.sid;
+      const section=document.getElementById('store-'+dragSid);
+      const rect=section.getBoundingClientRect();
+      section.classList.add('dragging');
+      ghost=document.createElement('div');
+      ghost.className='drag-ghost';
+      ghost.style.top=rect.top+'px';
+      const def=STORE_DEFS.find(s=>s.id===dragSid);
+      ghost.innerHTML=`${BARS_SVG}<div class="drag-ghost-name">${def?esc(def.name):''}</div>`;
+      document.body.appendChild(ghost);
+      document.addEventListener('touchmove',onMove,{passive:false});
+      document.addEventListener('touchend',onEnd,{passive:true});
+    },{passive:true});
+  });
+  function onMove(e){
+    if(!dragSid)return;e.preventDefault();
+    const y=e.touches[0].clientY;
+    if(ghost)ghost.style.top=y-28+'px';
+    clearOver();overSid=null;
+    const sections=getSections().filter(s=>s.dataset.sid!==dragSid);
+    for(const s of sections){
+      const rect=s.getBoundingClientRect();
+      if(y<rect.top+rect.height/2){s.classList.add('drag-over-top');overSid=s.dataset.sid;break;}
+      else{s.classList.remove('drag-over-top');s.classList.add('drag-over-bottom');overSid='after:'+s.dataset.sid;}
+    }
+  }
+  function onEnd(){
+    if(!dragSid)return;
+    removeGhost();clearOver();
+    const section=document.getElementById('store-'+dragSid);
+    if(section)section.classList.remove('dragging');
+    if(overSid){
+      const fi=storeOrder.indexOf(dragSid);storeOrder.splice(fi,1);
+      if(overSid.startsWith('after:')){const ti=storeOrder.indexOf(overSid.replace('after:',''));storeOrder.splice(ti+1,0,dragSid);}
+      else{const ti=storeOrder.indexOf(overSid);storeOrder.splice(ti,0,dragSid);}
+    }
+    dragSid=null;overSid=null;
+    document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('touchend',onEnd);
+    save();render();
+  }
+}
+
+// ── Info modal ──
+function openInfoModal(){document.getElementById('info-overlay').classList.add('open');document.body.classList.add('modal-open');}
+function closeInfoModal(){
+  const modal=document.getElementById('info-modal');
+  modal.style.transform='translateY(110%)';
+  setTimeout(()=>{document.getElementById('info-overlay').classList.remove('open');modal.style.transform='';document.body.classList.remove('modal-open');},350);
+}
+function infoOverlayClick(e){if(e.target===document.getElementById('info-overlay'))closeInfoModal();}
+
+function showHowTo(){
+  document.getElementById('info-modal-content').innerHTML=`
+<div class="howto-section">
+  <div class="howto-heading">Books</div>
+  <div class="howto-body">Swipe left and press <span class="howto-icon" style="background:var(--must)">${TRASH_SVG.replace('stroke="currentColor"','stroke="#fff"')}</span> to delete &nbsp;&bull;&nbsp; swipe right and press <span class="howto-icon" style="background:var(--edit-bg)">${PENCIL_SVG.replace('stroke="currentColor"','stroke="#fff"')}</span> to edit</div>
+</div>
+<div class="howto-section">
+  <div class="howto-heading">Stores &nbsp;<span style="font-size:12px;font-weight:400;color:var(--ink-60)">(in <svg style="width:13px;height:13px;vertical-align:middle;display:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11h14v10"/><path d="M9 21v-5h6v5"/></svg> By stores only)</span></div>
+  <div class="howto-body">To reorder, hold and drag the <span class="howto-icon">${BARS_SVG}</span> handle &nbsp;&bull;&nbsp; tap <span class="howto-icon" style="background:var(--edit-bg)"><svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 4,8 11,1"/></svg></span> to mark a store visited without a list book</div>
+</div>
+<div class="howto-section">
+  <div class="howto-heading">Adding books</div>
+  <div class="howto-body">Press the <span class="howto-icon" style="background:var(--ink)">${PLUS_SVG.replace('stroke="currentColor"','stroke="#EEF4A9"')}</span> button next to "How to use"</div>
+</div>`;
+  openInfoModal();
+}
+
+function showStoreInfo(e,sid){
+  e.stopPropagation();
+  const info=STORE_INFO[sid],def=STORE_DEFS.find(s=>s.id===sid);
+  if(!info||!def)return;
+  const addrEncoded=encodeURIComponent(info.address);
+  const invMap={new:'New books',used:'Used books',both:'New & used books'};
+  const inventory=invMap[def.type]||'';
+  document.getElementById('info-modal-content').innerHTML=`
+<div class="si-store-name">${esc(def.name)}</div>
+<div class="si-row"><div class="si-label">Inventory</div><div class="si-value">${inventory}</div></div>
+<div class="si-row"><div class="si-label">Event hours</div><div class="si-value">${esc(info.hours)}</div></div>
+<div class="si-row"><div class="si-label">Contact</div><div class="si-value"><a href="tel:${info.tel}">${esc(info.phone)}</a></div></div>
+<div class="si-row"><div class="si-label">Address</div><div class="si-value"><a href="https://maps.google.com/?q=${addrEncoded}" target="_blank">${esc(info.address)}</a></div></div>
+${info.note?LIB_NOTE:''}`;
+  openInfoModal();
+}
+
+(function(){
+  const modal=document.getElementById('info-modal');
+  let sy=0,dragging=false;
+  modal.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;dragging=false;},{passive:true});
+  modal.addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-sy;if(dy>0&&modal.scrollTop<=0){dragging=true;modal.style.transition='none';modal.style.transform=`translateY(${dy}px)`;e.preventDefault();}},{passive:false});
+  modal.addEventListener('touchend',e=>{modal.style.transition='';if(dragging&&(e.changedTouches[0].clientY-sy)>90)closeInfoModal();else modal.style.transform='';dragging=false;},{passive:true});
+})();
+
+// ── Book modal ──
+let selectedPriority='must',selectedStores=new Set();
+function openModal(){
+  editingBookId=null;
+  document.getElementById('modal-title').textContent='Add a book';
+  document.getElementById('btn-submit').textContent='Add book';
+  document.getElementById('f-title').value='';
+  document.getElementById('f-author').value='';
+  document.getElementById('f-genre').value='';
+  selectedPriority='must';selectedStores=new Set();
+  document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p==='must')t.classList.add('sel-must');});
+  buildStoreGrid();
+  document.getElementById('book-overlay').classList.add('open');
+  document.body.classList.add('modal-open');
+  setTimeout(()=>document.getElementById('f-title').focus(),400);
+}
+function openEditModal(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  editingBookId=id;
+  document.getElementById('modal-title').textContent='Edit book';
+  document.getElementById('btn-submit').textContent='Save changes';
+  document.getElementById('f-title').value=b.title;
+  document.getElementById('f-author').value=b.author;
+  document.getElementById('f-genre').value=b.genre;
+  selectedPriority=b.priority;selectedStores=new Set(b.stores);
+  document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p===b.priority)t.classList.add('sel-'+b.priority);});
+  buildStoreGrid();
+  document.getElementById('book-overlay').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeBookModal(){
+  const modal=document.getElementById('book-modal');
+  modal.style.transform='translateY(110%)';
+  setTimeout(()=>{document.getElementById('book-overlay').classList.remove('open');modal.style.transform='';document.body.classList.remove('modal-open');},350);
+}
+function bookOverlayClick(e){if(e.target===document.getElementById('book-overlay'))closeBookModal();}
+function buildStoreGrid(){
+  document.getElementById('store-grid').innerHTML=STORE_DEFS.map(s=>
+    `<button class="store-toggle${selectedStores.has(s.id)?' sel':''}" onclick="toggleStoreSelect('${s.id}')">${s.name}</button>`
+  ).join('');
+}
+function toggleStoreSelect(id){if(selectedStores.has(id))selectedStores.delete(id);else selectedStores.add(id);buildStoreGrid();}
+function selectPriority(p){selectedPriority=p;document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p===p)t.classList.add('sel-'+p);});}
+function submitBook(){
+  const title=document.getElementById('f-title').value.trim();
+  const author=document.getElementById('f-author').value.trim();
+  const genre=document.getElementById('f-genre').value.trim();
+  if(!title||!author){alert('Please enter at least a title and author.');return;}
+  if(editingBookId!==null){
+    const b=books.find(x=>x.id===editingBookId);
+    if(b){b.title=title;b.author=author;b.genre=genre||'General';b.priority=selectedPriority;b.stores=[...selectedStores];}
+    editingBookId=null;
+  } else {
+    books.push({id:nextId++,title,author,genre:genre||'General',priority:selectedPriority,stores:[...selectedStores],found:false,foundAt:null});
+  }
+  save();closeBookModal();setTimeout(render,360);
+}
+
+(function(){
+  const modal=document.getElementById('book-modal');
+  let sy=0,dragging=false;
+  modal.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;dragging=false;},{passive:true});
+  modal.addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-sy;if(dy>0&&modal.scrollTop<=0){dragging=true;modal.style.transition='none';modal.style.transform=`translateY(${dy}px)`;e.preventDefault();}},{passive:false});
+  modal.addEventListener('touchend',e=>{modal.style.transition='';if(dragging&&(e.changedTouches[0].clientY-sy)>90)closeBookModal();else modal.style.transform='';dragging=false;},{passive:true});
+})();
+
+load();
+document.getElementById('view-subtitle').textContent=currentView==='stores'?'Books likely to be found at this store':'My book wish list';
+render();
+</script>
+</body>
+</html>
