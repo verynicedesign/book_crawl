@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Ryan's Book Crawl 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#1B1B1B;--ink-60:#767676;--ink-40:#A4A4A4;--ink-20:#D1D1D1;--ink-10:#E8E8E8;
+  --cream:#F7F5F3;--lime:#EEF4A9;--lime-dark:#5F6244;
+  --must:#E24B4A;--nice:#EF9F27;--bonus:#639922;
+  --must-bg:#FCEBEB;--nice-bg:#FAEEDA;--bonus-bg:#EAF3DE;
+  --edit-bg:#1a7f4b;--r:12px;--rs:8px
+}
+html{font-size:16px;background:var(--cream)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--cream);min-height:100vh;padding-bottom:40px}
+body.modal-open{position:fixed;width:100%;overflow:hidden}
+
+/* header */
+.sticky-head{position:sticky;top:0;z-index:100;background:var(--ink);padding:16px 20px 12px;overflow:visible}
+.title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.app-title{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lime);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:rgba(255,255,255,.07);border-radius:var(--rs);padding:8px 6px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:#fff;display:block;line-height:1;margin-bottom:3px}
+.stat-label{font-size:10px;color:var(--ink-40);text-transform:uppercase;letter-spacing:.04em}
+.stat.hi .stat-num{color:var(--lime)}
+.search-input{width:100%;height:44px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:var(--rs);padding:0 14px;font-size:16px;color:#fff;outline:none;-webkit-appearance:none}
+.search-input::placeholder{color:var(--ink-40)}
+.search-input:focus{border-color:var(--lime)}
+
+/* filter chips */
+.filter-chips{background:var(--ink);padding:0 20px 12px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filter-chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:44px;padding:0 14px;border-radius:99px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--ink-40);font-size:13px;cursor:pointer;white-space:nowrap;-webkit-appearance:none}
+.chip.a-all{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.chip.a-must{background:var(--must-bg);color:var(--must);border-color:var(--must)}
+.chip.a-nice{background:var(--nice-bg);color:#7a5200;border-color:var(--nice)}
+.chip.a-bonus{background:var(--bonus-bg);color:#2d4d0a;border-color:var(--bonus)}
+.chip.a-found{background:var(--lime);color:var(--lime-dark);border-color:var(--lime-dark)}
+.chip.a-unfound{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* content */
+.content{padding:16px 16px 0}
+
+/* view toggle */
+.view-toggle{display:flex;background:var(--ink-10);border-radius:10px;padding:3px;margin-bottom:14px;gap:3px}
+.vtab{flex:1;height:44px;border-radius:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--ink-60);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-appearance:none;transition:all .15s}
+.vtab svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.vtab.active{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* top bar */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.add-book-btn{width:100%;height:44px;padding:0 16px;border-radius:8px;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;color:var(--lime)}
+.add-book-btn svg{width:14px;height:14px;fill:none;stroke:var(--lime);stroke-width:2.5;stroke-linecap:round;flex-shrink:0}
+.how-to-btn{display:flex;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;font-size:12px;color:var(--ink-60)}
+.info-i{display:inline-flex;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-40);align-items:center;justify-content:center;font-size:9px;font-style:italic;font-weight:700;color:var(--ink-60);flex-shrink:0}
+
+/* store sections */
+.store-section{background:#fff;border-radius:var(--r);margin-bottom:12px;overflow:hidden;border:1px solid var(--ink-10);transition:opacity .15s}
+.store-section.dragging{opacity:.3}
+.store-section.drag-over-top{border-top:2px solid var(--lime-dark)}
+.store-section.drag-over-bottom{border-bottom:2px solid var(--lime-dark)}
+.store-header{display:flex;align-items:center;padding:14px 16px;gap:10px;min-height:56px}
+.drag-handle{width:32px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--ink-40);flex-shrink:0;margin:-10px 0 -10px -10px;cursor:grab;touch-action:none}
+.drag-handle svg{width:16px;height:14px;fill:var(--ink-40)}
+.store-tap{display:flex;align-items:center;flex:1;gap:8px;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:0}
+.store-name-group{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.store-name{font-size:16px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-info-btn{background:none;border:none;padding:2px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.store-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.chevron{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--ink-40);transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(180deg)}
+.chevron svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.store-books{display:none}.store-books.open{display:block}
+
+/* drag ghost */
+.drag-ghost{position:fixed;left:16px;right:16px;background:#fff;border-radius:var(--r);border:1.5px solid var(--lime-dark);padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.drag-ghost svg{width:16px;height:14px;fill:var(--ink-40)}
+.drag-ghost-name{font-size:16px;font-weight:700;color:var(--ink)}
+
+/* swipe rows (shared between both views) */
+.swipe-wrap{position:relative;overflow:hidden;border-top:1px solid var(--ink-10)}
+.swipe-bg{position:absolute;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center}
+.swipe-bg svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.swipe-bg-edit{left:0;background:var(--edit-bg)}
+.swipe-bg-del{right:0;background:var(--must)}
+.book-row{position:relative;background:#fff;display:flex;align-items:flex-start;padding:12px 16px;gap:10px;will-change:transform;-webkit-user-select:none;user-select:none}
+.book-row.animating{transition:transform .22s ease}
+/* priority indicator rule removed */
+.pi-must{background:var(--must)}.pi-nice{background:var(--nice)}.pi-bonus{background:var(--bonus)}
+.check-tap{width:36px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.checkbox{width:24px;height:24px;border:2px solid var(--ink-20);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;transition:all .15s}
+.checkbox.checked{background:var(--ink);border-color:var(--ink)}
+.check-icon{display:none}
+.checkbox.checked .check-icon{display:block}
+.check-icon svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.book-info{flex:1;min-width:0;padding-top:1px}
+.book-title{font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:2px}
+.book-author{font-size:13px;color:var(--ink-60);margin-bottom:3px}
+.book-genre{font-size:11px;color:var(--ink-40);text-transform:uppercase;letter-spacing:.04em}
+
+/* priority select (stores view) */
+.priority-select{font-size:12px;font-weight:500;padding:5px 22px 5px 8px;color:var(--ink-60);cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;border:1px solid var(--ink-20);border-radius:6px;background-color:var(--cream);height:44px;min-width:82px;margin-top:0}
+.p-must{border-radius:6px!important;border-color:var(--must)!important;color:var(--must)!important;background-color:var(--must-bg)!important}
+.p-nice{border-radius:6px!important;border-color:var(--nice)!important;color:#7a5200!important;background-color:var(--nice-bg)!important}
+.p-bonus{border-radius:6px!important;border-color:var(--bonus)!important;color:#2d4d0a!important;background-color:var(--bonus-bg)!important}
+
+/* store select (books view) */
+.store-select{font-size:12px;font-weight:500;padding:5px 22px 5px 8px;color:var(--ink-60);cursor:pointer;text-overflow:ellipsis;overflow:hidden;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;border:1px solid var(--ink-20);border-radius:6px;background-color:var(--cream);height:44px;min-width:110px;max-width:150px;margin-top:0;line-height:1.3}
+.store-
+
+/* books view list */
+.books-view-wrap{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--ink-10)}
+.books-view-wrap .swipe-wrap:first-child{border-top:none}
+
+/* empty */
+.empty{text-align:center;padding:48px 20px;color:var(--ink-60);font-size:15px}
+
+/* book modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none}
+.modal-overlay.open{display:block}
+.modal{position:fixed;top:72px;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:20px;padding-bottom:max(48px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .35s cubic-bezier(.32,.72,0,1);will-change:transform;z-index:201}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--ink-20);border-radius:99px;margin:0 auto 20px}
+.modal-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:20px}
+.form-field{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--ink-60);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.form-input{width:100%;height:44px;border:1px solid var(--ink-20);border-radius:var(--rs);padding:0 12px;font-size:16px;color:var(--ink);background:#fff;outline:none;-webkit-appearance:none}
+.form-input:focus{border-color:var(--ink)}
+.priority-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ptab{height:44px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;font-size:13px;font-weight:600;color:var(--ink-60);cursor:pointer;-webkit-appearance:none}
+.ptab.sel-must{background:var(--must-bg);border-color:var(--must);color:var(--must)}
+.ptab.sel-nice{background:var(--nice-bg);border-color:var(--nice);color:#7a5200}
+.ptab.sel-bonus{background:var(--bonus-bg);border-color:var(--bonus);color:#2d4d0a}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.store-toggle{padding:10px 12px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;font-size:13px;color:var(--ink-60);cursor:pointer;text-align:left;-webkit-appearance:none;line-height:1.3}
+.store-toggle.sel{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.btn-cancel{height:48px;border-radius:var(--rs);border:1px solid var(--ink-20);background:transparent;color:var(--ink-60);font-size:15px;cursor:pointer;-webkit-appearance:none}
+.btn-submit{height:48px;border-radius:var(--rs);border:none;background:var(--ink);color:var(--lime);font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+.btn-submit:active{opacity:.8}.btn-cancel:active{background:var(--ink-10)}
+
+/* info modal */
+.info-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:75vh;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:20px;padding-bottom:max(40px,env(safe-area-inset-bottom));transform:translateY(110%);transition:transform .35s cubic-bezier(.32,.72,0,1);will-change:transform;z-index:201}
+.modal-overlay.open .info-modal{transform:translateY(0)}
+.si-store-name{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.2}
+.si-row{margin-bottom:16px}
+.si-label{font-size:11px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.si-value{font-size:15px;color:var(--ink-60);line-height:1.5}
+.si-value a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink-20)}
+.si-note{margin-top:20px;background:var(--lime);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--lime-dark);font-weight:600;line-height:1.5}
+.howto-section{margin-bottom:22px}
+.howto-section:last-child{margin-bottom:0}
+.howto-heading{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.howto-body{font-size:14px;color:var(--ink-60);line-height:1.6;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.howto-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:var(--ink-10);flex-shrink:0}
+.howto-icon svg{width:14px;height:14px}
+.howto-icon-circle{border-radius:50%!important}
+.store-visited-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.visited-circle{width:24px;height:24px;border-radius:50%;background:var(--ink-20);border:none;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.visited-circle.checked{background:var(--ink)}
+.visited-circle svg{display:block;width:11px;height:9px}
+.visited-circle:not(.checked) svg polyline{stroke:rgba(255,255,255,.55)}
+.visited-circle.checked svg polyline{stroke:#fff}
+.view-subtitle{font-size:14px;font-weight:500;color:var(--ink-60);margin-bottom:12px;padding:0 2px}
+.list-divider{height:1px;background:var(--ink-10);margin-bottom:14px}
+.store-list-header{display:flex;align-items:center;padding:0 16px 10px 16px;gap:10px}
+.slh-name{font-size:10px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.slh-action{font-size:10px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;display:flex;align-items:center;gap:4px}
+
+/* clear filter */
+.clear-filter-btn{margin-top:14px;height:44px;padding:0 20px;border-radius:99px;border:1px solid var(--ink-20);background:transparent;color:var(--ink-60);font-size:14px;cursor:pointer;-webkit-appearance:none;display:inline-block}
+.clear-filter-btn:active{background:var(--ink-10)}
+
+/* wishlist count */
+.wishlist-count{font-size:13px;color:var(--ink-60);margin-bottom:12px;padding:0 2px;text-align:right}
+.wishlist-count strong{color:var(--ink);font-weight:600}
+
+/* swipe hint animation */
+@keyframes swipe-hint{0%{transform:translateX(0)}30%{transform:translateX(-28px)}60%{transform:translateX(0)}80%{transform:translateX(-12px)}100%{transform:translateX(0)}}
+.swipe-hint-animate{animation:swipe-hint .9s ease 1.2s both}
+
+
+/* prize toast */
+.prize-toast{background:#333;color:#fff;font-size:14px;font-weight:500;padding:11px 16px;border-radius:10px;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;text-align:center;line-height:1.4;transform:translateY(8px)}
+.prize-toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+
+/* confetti canvas */
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:998}
+
+.crawl-progress-wrap{height:3px;background:rgba(255,255,255,.1);border-radius:99px;margin-bottom:10px;overflow:hidden}
+.crawl-progress-bar{height:100%;background:var(--lime);border-radius:99px;transition:width .4s ease;width:0%}
+
+.priority-divider{display:flex;align-items:center;gap:10px;padding:10px 16px 4px;border-top:1px solid var(--ink-10)}
+.priority-divider span{font-size:10px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.priority-divider::after{content:'';flex:1;height:1px;background:var(--ink-10)}
+
+@keyframes found-flash{0%{background:#e0f2ea}100%{background:#fff}}
+.book-row.flash-found{animation:found-flash .8s ease forwards}
+
+.store-status{display:inline-flex;align-items:center;font-size:13px;font-weight:600;padding:5px 12px;border-radius:99px;margin-bottom:18px}
+.status-open{background:#e0f2ea;color:var(--edit-bg)}
+.status-closing{background:var(--nice-bg);color:#7a5200}
+.status-closed{background:var(--must-bg);color:var(--must)}
+
+.store-section.store-done{background:var(--lime);border-color:var(--lime-dark)}
+.store-section.store-done .store-name{color:var(--lime-dark)}
+.store-section.store-done .store-header{background:var(--lime)}
+.store-section.store-done .drag-handle svg{fill:var(--lime-dark)}
+.store-section.store-done .info-i{border-color:var(--lime-dark);color:var(--lime-dark)}
+.store-section.store-done .chevron{color:var(--lime-dark)}
+.store-section.store-done .visited-circle{background:var(--lime-dark);border-color:var(--lime-dark)}
+
+/* splash overlay */
+#splash-overlay{position:fixed;inset:0;background:var(--ink);z-index:2000;display:flex;align-items:flex-end}
+.splash-inner{width:100%;height:92vh;display:flex;flex-direction:column;padding:24px 28px max(32px,env(safe-area-inset-bottom));position:relative;overflow:hidden}
+.splash-close{position:absolute;top:max(64px,env(safe-area-inset-top) + 52px);right:16px;background:none;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;z-index:1}
+.splash-slides{flex:1;position:relative;overflow:hidden}
+.splash-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;opacity:0;transform:translateX(40px);transition:opacity .35s ease,transform .35s ease;pointer-events:none}
+.splash-slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.splash-slide.exit{opacity:0;transform:translateX(-40px)}
+.splash-icon{width:100px;height:100px;margin-bottom:28px;flex-shrink:0}
+.splash-icon svg{width:100%;height:100%}
+.splash-headline{font-size:26px;font-weight:700;color:var(--lime);margin-bottom:14px;line-height:1.2}
+.splash-body{font-size:15px;color:rgba(255,255,255,.75);line-height:1.7;max-width:300px}
+.splash-body strong{color:#fff;font-weight:600}
+.prize-list{margin-bottom:14px;text-align:left;display:inline-block}
+.prize-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;color:rgba(255,255,255,.75)}
+.prize-num{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--lime);color:var(--ink);font-weight:700;font-size:13px;align-items:center;justify-content:center;flex-shrink:0}
+.splash-cta{margin-top:28px;height:52px;padding:0 40px;border-radius:99px;background:var(--lime);border:none;color:var(--ink);font-size:16px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.splash-cta:active{opacity:.85}
+.splash-nav{display:flex;align-items:center;justify-content:space-between;padding-top:20px;flex-shrink:0}
+.splash-dots{display:flex;gap:6px;align-items:center}
+.splash-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .2s;cursor:pointer}
+.splash-dot.active{width:20px;border-radius:3px;background:var(--lime)}
+.splash-next{height:44px;padding:0 24px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+.splash-next:active{background:rgba(255,255,255,.2)}
+
+
+.hamburger-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hamburger-btn svg rect{fill:#EEF4A9}
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+.menu-drawer{position:fixed;top:0;right:0;bottom:0;width:75vw;max-width:300px;background:var(--ink);z-index:501;transform:translateX(105%);transition:transform .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.3)}
+.menu-drawer.open{transform:translateX(0)}
+.menu-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.menu-title{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+.menu-close{background:none;border:none;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0}
+.menu-close svg{width:18px;height:18px}
+.menu-body{padding:16px 12px;flex:1}
+.menu-item{width:100%;display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:var(--rs);background:none;border:none;color:#fff;font-size:16px;font-weight:500;cursor:pointer;text-align:left;-webkit-appearance:none;transition:background .15s}
+.menu-item:active{background:rgba(255,255,255,.1)}
+.menu-item-icon{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--lime)}
+.menu-item-icon svg{width:18px;height:18px}
+
+.prize-note{margin-top:12px;font-size:14px;color:rgba(255,255,255,.6);line-height:1.5}
+
+.undo-toast{background:#333;color:#fff;font-size:14px;font-weight:500;padding:11px 16px;border-radius:10px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;display:flex;align-items:center;gap:12px;transform:translateY(8px)}
+.undo-toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.undo-toast-msg{flex:1;min-width:0}
+.undo-toast-btn{flex-shrink:0;background:var(--lime);color:var(--ink);border:none;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+
+.sort-select{font-size:12px;font-weight:600;color:var(--ink-60);background:var(--cream);border:1px solid var(--ink-20);border-radius:6px;padding:5px 22px 5px 9px;height:44px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
+.books-group-label{font-size:11px;font-weight:600;color:var(--ink-40);text-transform:uppercase;letter-spacing:.06em;padding:16px 4px 6px;margin-top:0;display:flex;align-items:center;gap:8px}
+.books-group-label:first-child{padding-top:0}
+.bgl-name{flex:0 0 auto}
+.wl-count{flex:1;font-size:12px;font-weight:500;color:var(--ink-60);text-transform:none;letter-spacing:0;text-align:center}
+.sort-select-inline{flex:0 0 auto}
+
+select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23767676' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+.si-maps-row{display:flex;gap:10px;margin-bottom:16px}
+.si-map-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--ink-10);color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;border:1px solid var(--ink-20)}
+.si-map-btn:active{background:var(--ink-20)}
+
+.toast-stack{position:fixed;bottom:max(24px,env(safe-area-inset-bottom) + 16px);left:16px;right:16px;z-index:1001;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-stack>*{pointer-events:auto}
+
+.si-search-btn{display:flex;align-items:center;gap:8px;margin-top:16px;padding:12px 16px;border-radius:8px;background:var(--ink);color:#fff;font-size:14px;font-weight:600;text-decoration:none;justify-content:center}
+.si-search-btn svg{flex-shrink:0}
+.si-search-btn:active{opacity:.8}
+.si-call-btn{background:var(--cream);color:var(--ink);border:1.5px solid var(--ink-20)}
+
+.search-panel{position:absolute;left:0;right:0;top:100%;background:#fff;z-index:151;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--ink-10);padding-bottom:max(24px,env(safe-area-inset-bottom) + 12px);box-sizing:border-box}
+.sp-section-label{font-size:10px;font-weight:700;color:var(--ink-40);text-transform:uppercase;letter-spacing:.08em;padding:12px 20px 6px}
+.sp-my-list{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--ink-10)}
+.sp-my-list:active{background:var(--cream)}
+.sp-my-list-icon{width:36px;height:36px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-my-list-icon svg{width:16px;height:16px;fill:none;stroke:var(--lime);stroke-width:2;stroke-linecap:round}
+.sp-my-list-text{font-size:15px;font-weight:600;color:var(--ink)}
+.sp-my-list-sub{font-size:12px;color:var(--ink-60);margin-top:1px}
+.sp-store-row{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;border-bottom:1px solid var(--ink-10)}
+.sp-store-row:last-child{border-bottom:none}
+.sp-store-row:active{background:var(--cream)}
+.sp-store-icon{width:32px;height:32px;border-radius:8px;background:var(--ink-10);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-store-icon svg{width:14px;height:14px;fill:none;stroke:var(--ink-60);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp-store-name{font-size:14px;font-weight:500;color:var(--ink);flex:1}
+.sp-store-arrow{color:var(--ink-40)}
+.sp-store-arrow svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+.call-inv-card{background:#fff;border-radius:16px;padding:24px 20px;margin:20px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.call-inv-title{font-size:17px;font-weight:700;color:var(--ink)}
+.call-inv-msg{font-size:14px;color:var(--ink-60);line-height:1.5}
+.call-inv-phone{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:10px;background:var(--ink);color:#fff;font-size:16px;font-weight:700;text-decoration:none;width:100%}
+.call-inv-close{margin-top:4px;background:none;border:none;color:var(--ink-40);font-size:14px;cursor:pointer;padding:4px 8px}
+
+.book-row.found .book-title{text-decoration:line-through;opacity:.45}
+.book-row.found .book-author,.book-row.found .book-genre{opacity:.35}
+
+.search-submit-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.search-submit-btn:active{opacity:.8}
+
+.sp-top-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px}
+.sp-close-btn{width:32px;height:32px;border-radius:50%;background:var(--ink-10);border:none;cursor:pointer;font-size:20px;line-height:1;color:var(--ink-60);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-close-btn:active{background:var(--ink-20)}
+
+select.s-found{border-color:var(--edit-bg)!important;color:var(--edit-bg)!important;background-color:#e0f2ea!important}
+
+.search-clear-btn{position:absolute;right:50px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:underline;cursor:pointer;padding:0;white-space:nowrap;z-index:1}
+.search-clear-btn:active{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="sticky-head">
+  <div class="title-bar"><div class="app-title">Ryan's Book Crawl 2026</div><button class="hamburger-btn" onclick="openMenu()" aria-label="Menu"><svg width="22" height="16" viewBox="0 0 22 16" xmlns="http://www.w3.org/2000/svg"><rect y="0" width="22" height="2.5" rx="1.25" fill="#EEF4A9"/><rect y="6.75" width="22" height="2.5" rx="1.25" fill="#EEF4A9"/><rect y="13.5" width="22" height="2.5" rx="1.25" fill="#EEF4A9"/></svg></button></div>
+  <div class="stats-row">
+    <div class="stat hi"><span class="stat-num" id="stat-found">0</span><span class="stat-label">Found</span></div>
+    <div class="stat"><span class="stat-num" id="stat-must">0</span><span class="stat-label">Must left</span></div>
+    <div class="stat"><span class="stat-num" id="stat-stores">0</span><span class="stat-label">Stores left</span></div>
+  </div>
+  <div class="crawl-progress-wrap"><div class="crawl-progress-bar" id="crawl-progress-bar"></div></div>
+  <div style="position:relative">
+  <input class="search-input" type="search" id="search" placeholder="Search books or authors..." autocorrect="off" autocapitalize="off" oninput="showSearchPanel();toggleClearBtn()" onfocus="showSearchPanel();toggleClearBtn()" onkeydown="handleSearchKey(event)" autocomplete="off" style="padding-right:90px">
+  <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" style="display:none">clear</button>
+  <button class="search-submit-btn" onclick="document.getElementById('search').blur();closeSearchPanel()" aria-label="Search my list">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EEF4A9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+  </div>
+<div id="search-panel" class="search-panel" style="display:none"></div>
+<div id="no-results-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,.5)" onclick="this.style.display='none'"><div class="call-inv-card" onclick="event.stopPropagation()"><div class="call-inv-title">No results found</div><div class="call-inv-msg" id="no-results-msg">That title isn't on your list yet. Try searching a store's catalog to see if they carry it.</div><button class="call-inv-close" onclick="document.getElementById('no-results-modal').style.display='none'">Got it</button></div></div>
+<div id="call-inventory-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,.5)" onclick="this.style.display='none'"><div class="call-inv-card" onclick="event.stopPropagation()"><div class="call-inv-title">Call for inventory</div><div class="call-inv-msg">This store doesn't have an online catalog.<br>Give them a call to check availability!</div><a id="call-inv-link" href="" class="call-inv-phone"></a><button class="call-inv-close" onclick="document.getElementById('call-inventory-modal').style.display='none'">Close</button></div></div>
+</div>
+
+<div id="search-backdrop" style="display:none;position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.25)" onclick="closeSearchPanel()"></div>
+<div class="filter-chips">
+  <button class="chip a-all" data-f="all" onclick="setFilter('all')">All</button>
+  <button class="chip" data-f="must" onclick="setFilter('must')">Must-have</button>
+  <button class="chip" data-f="nice" onclick="setFilter('nice')">Nice to find</button>
+  <button class="chip" data-f="bonus" onclick="setFilter('bonus')">Bonus</button>
+  <button class="chip" data-f="found" onclick="setFilter('found')">Found</button>
+  <button class="chip" data-f="unfound" onclick="setFilter('unfound')">Not found</button>
+</div>
+
+<div class="content">
+  <div class="view-toggle">
+    <button class="vtab active" id="vtab-stores" onclick="setView('stores')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11h14v10"/><path d="M9 21v-5h6v5"/></svg>
+      By stores
+    </button>
+    <button class="vtab" id="vtab-books" onclick="setView('books')">
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      By books
+    </button>
+  </div>
+  <div id="view-subtitle" class="view-subtitle">Books likely to be found at this store</div>
+  <div class="top-bar">
+    <button class="add-book-btn" onclick="openModal()" aria-label="Add book">
+      <svg viewBox="0 0 18 18"><line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/></svg>
+      Add a book
+    </button>
+  </div>
+  <div class="list-divider" id="list-divider"></div>
+  <div class="store-list-header" id="store-list-header">
+    <div class="slh-name">Bookstore</div>
+    <div class="slh-action">Found something else<span style="width:16px;height:16px;border-radius:50%;background:var(--ink-20);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="8" height="7" viewBox="0 0 12 10" fill="none"><polyline points="1,5 4,8 11,1" stroke="rgba(255,255,255,.55)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+  </div>
+  <div class="wishlist-count" id="wishlist-count" style="display:none"></div>
+  <div id="store-list"></div>
+  <div class="empty" id="empty-state" style="display:none">No books match your filter.<br><button class="clear-filter-btn" onclick="clearFilter()">Clear filter</button></div>
+</div>
+
+<canvas id="confetti-canvas" style="display:none"></canvas>
+<div class="toast-stack" id="toast-stack"><div class="prize-toast" id="prize-toast"></div></div>
+<!-- book add/edit modal -->
+<div class="modal-overlay" id="book-overlay" onclick="bookOverlayClick(event)">
+  <div class="modal" id="book-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Add a book</div>
+    <div class="form-field"><label class="form-label">Title</label><input class="form-input" id="f-title" type="text" placeholder="Book title" autocorrect="off"></div>
+    <div class="form-field"><label class="form-label">Author</label><input class="form-input" id="f-author" type="text" placeholder="Author name" autocorrect="off"></div>
+    <div class="form-field"><label class="form-label">Genre</label>
+<select class="form-input" id="f-genre">
+  <option value="">Select a genre...</option>
+  <option value="Business">Business</option>
+  <option value="Contemporary / Literary Fiction">Contemporary / Literary Fiction</option>
+  <option value="Design">Design</option>
+  <option value="Essays / Short Stories">Essays / Short Stories</option>
+  <option value="Fantasy">Fantasy</option>
+  <option value="Graphic Novels">Graphic Novels</option>
+  <option value="Historical Fiction">Historical Fiction</option>
+  <option value="Horror">Horror</option>
+  <option value="Memoir / Biography">Memoir / Biography</option>
+  <option value="Mystery / Thriller">Mystery / Thriller</option>
+  <option value="Philosophy">Philosophy</option>
+  <option value="Poetry">Poetry</option>
+  <option value="Psychology">Psychology</option>
+  <option value="Romance">Romance</option>
+  <option value="Science Fiction">Science Fiction</option>
+  <option value="Self-Help / Personal Development">Self-Help / Personal Development</option>
+  <option value="Spirituality">Spirituality</option>
+  <option value="Travel">Travel</option>
+  <option value="True Crime">True Crime</option>
+</select></div>
+    <div class="form-field">
+      <label class="form-label">Priority</label>
+      <div class="priority-tabs">
+        <button class="ptab sel-must" data-p="must" onclick="selectPriority('must')">Must</button>
+        <button class="ptab" data-p="nice" onclick="selectPriority('nice')">Nice</button>
+        <button class="ptab" data-p="bonus" onclick="selectPriority('bonus')">Bonus</button>
+      </div>
+    </div>
+    <div class="form-field"><label class="form-label">Likely to be found at</label><div class="store-grid" id="store-grid"></div></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBookModal()">Cancel</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitBook()">Add book</button>
+    </div>
+  </div>
+</div>
+
+<!-- info modal -->
+<div class="modal-overlay" id="info-overlay" onclick="infoOverlayClick(event)">
+  <div class="info-modal" id="info-modal">
+    <div class="modal-handle"></div>
+    <div id="info-modal-content"></div>
+  </div>
+</div>
+
+<script>
+const STORE_DEFS=[
+  {id:"camino",       name:"Camino Books",              type:"new",  label:"New"},
+  {id:"ucsd",         name:"UCSD Bookstore",             type:"new",  label:"New"},
+  {id:"warwicks",     name:"Warwick\u2019s",              type:"new",  label:"New"},
+  {id:"birdrock",     name:"Bird Rock Bookshop",         type:"new",  label:"New"},
+  {id:"bookplace",    name:"The Book Place",             type:"used", label:"Used"},
+  {id:"meetcute",     name:"Meet Cute",                  type:"new",  label:"New"},
+  {id:"libelula",     name:"Lib\u00e9lula",              type:"new",  label:"New"},
+  {id:"baybooks",     name:"Bay Books Coronado",         type:"new",  label:"New"},
+  {id:"mystgalaxy",   name:"Mysterious Galaxy",          type:"new",  label:"New"},
+  {id:"laplaya",      name:"La Playa Books",             type:"both", label:"New +<br>Used"},
+  {id:"libraryshop",  name:"Library Shop Mission Hills", type:"new",  label:"New"},
+  {id:"libraryshopsd",name:"Library Shop SD",            type:"new",  label:"New"},
+  {id:"bluestocking", name:"Bluestocking Books",         type:"both", label:"New +<br>Used"},
+  {id:"verbatim",     name:"Verbatim Books",             type:"both", label:"New +<br>Used"},
+  {id:"bookcatapult", name:"The Book Catapult",          type:"new",  label:"New"},
+  {id:"heybooks",     name:"Hey Books!",                 type:"both", label:"New +<br>Used"},
+];
+
+const LIB_NOTE=`<div class="si-note">You only need to visit one of the two Library Shop locations to get your stamp!</div>`;
+const STORE_INFO={
+  camino:        {hours:"Sat. 8am-8pm, Sun. 10am-6pm, Mon. 10am-8pm",         phone:"(858) 925-7078",tel:"+18589257078",address:"1555 Camino Del Mar, Suite 114 Del Mar Plaza, Del Mar, CA 92014",searchUrl:"https://caminobks.com/search?q="},
+  ucsd:          {hours:"Sat. & Sun. 9am-4pm, Mon. 8am-6pm",                  phone:"(858) 534-3149",tel:"+18585343149",address:"9500 Gilman Dr. in the Price Center, La Jolla, CA 92093",searchUrl:"https://www.ucsandiegobookstore.com/search?keywords="},
+  warwicks:      {hours:"Sat. & Mon. 9am-6pm, Sun. 10am-5:30pm",              phone:"(858) 454-0347",tel:"+18584540347",address:"7812 Girard Ave., La Jolla, CA 92037",searchUrl:"https://www.warwicks.com/search/site/"},
+  birdrock:      {hours:"Sat. 9am-6pm, Sun. 10am-5pm, Mon. 9am-6pm",          phone:"(317) 289-7569",tel:"+13172897569",address:"5604 La Jolla Blvd., #B, La Jolla, CA 92037",searchUrl:"https://bookshop.org/beta-search?keywords="},
+  bookplace:     {hours:"Sat., Sun., & Mon. 10am-5pm",                         phone:"(619) 492-4200",tel:"+16194924200",address:"6122 Lake Murray Blvd., La Mesa, CA 91942",searchUrl:"https://bookshop.org/beta-search?keywords="},
+  meetcute:      {hours:"Sat. & Sun. 10am-7pm, Mon. 11am-5pm",                phone:"(619) 439-7707",tel:"+16194397707",address:"8235 La Mesa Blvd., La Mesa, CA 91942",searchUrl:"https://meetcutebookshop.com/browse/filter/t/",searchUrlSuffix:"/k/keyword"},
+  libelula:      {hours:"Sat. 8am-6pm, Sun. 9am-6pm, Mon. 10am-6pm",          phone:"(619) 775-4040",tel:"+16197754040",address:"950 South 26th St., San Diego, CA 92113",searchUrl:"https://bookshop.org/beta-search?keywords="},
+  baybooks:      {hours:"Sat. 9am-7pm, Sun. 9am-6pm, Mon. 9am-7pm",           phone:"(619) 435-0070",tel:"+16194350070",address:"1007 Orange Ave. Coronado, CA 92118",searchUrl:"https://www.baybookscoronado.com/search?q="},
+  mystgalaxy:    {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-7pm",                 phone:"(619) 539-7137",tel:"+16195397137",address:"3555 Rosecrans Suite 107A, San Diego, CA 92110",searchUrl:"https://www.mystgalaxy.com/search?q="},
+  laplaya:       {hours:"Sat. & Sun. 9am-6pm, Mon. 10am-6pm",                 phone:"(619) 226-2601",tel:"+16192262601",address:"1026 Rosecrans St., San Diego, CA 92106",searchUrl:"https://www.laplayabooks.com/search?q=",searchUrl:"https://www.laplayabooks.com/search?q="},
+  libraryshop:   {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-6pm",                 phone:"(619) 782-7541",tel:"+16197827541",address:"925 W. Washington St., San Diego, CA 92103",note:true,searchUrl:"https://www.libraryshopsd.com/s/search?q="},
+  libraryshopsd: {hours:"Sat. 9:30am-6pm, Sun. 11am-6pm, Mon. 11:30am-6pm",  phone:"(619) 236-5802",tel:"+16192365802",address:"330 Park Blvd., San Diego, CA 92101",note:true,searchUrl:"https://www.libraryshopsd.com/s/search?q="},
+  bluestocking:  {hours:"Sat. 10am-7pm, Sun. 10am-6pm, Mon. 11am-6pm",        phone:"(619) 296-1424",tel:"+16192961424",address:"3817 Fifth Ave., San Diego, CA 92103",searchUrl:null,callForInventory:true},
+  verbatim:      {hours:"Sat. 10am-7pm, Sun. & Mon. 10am-6pm",                phone:"(619) 501-7466",tel:"+16195017466",address:"3793 30th St., San Diego, CA 92104",searchUrl:null,callForInventory:true},
+  bookcatapult:  {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-6pm",                 phone:"(619) 795-3780",tel:"+16197953780",address:"3010-B Juniper St., San Diego, CA 92104",searchUrl:"https://thebookcatapult.com/search?q="},
+  heybooks:      {hours:"Sat. & Sun. 9am-8pm, Mon. 10am-6pm",                 phone:"(619) 693-4462",tel:"+16196934462",callForInventory:true,address:"921 E St., San Diego, CA 92120",searchUrl:null},
+};
+
+const DEFAULT_BOOKS=[];
+
+let books=[],openStores=new Set(),storeOrder=[],manuallyVisitedStores=new Set(),nextId=23,cf='all',currentView='stores',sortBy='priority',editingBookId=null,activeSwipeRow=null;
+const PRIO={must:0,nice:1,bonus:2};
+const BARS_SVG=`<svg viewBox="0 0 16 14"><rect y="0" width="16" height="2" rx="1"/><rect y="6" width="16" height="2" rx="1"/><rect y="12" width="16" height="2" rx="1"/></svg>`;
+const PENCIL_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const TRASH_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+const PLUS_SVG=`<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/></svg>`;
+const CHECK=`<svg viewBox="0 0 13 10"><polyline points="1,5 5,9 12,1"/></svg>`;
+
+function lastName(a){return a.split('&')[0].trim().split(/\s+/).pop().toLowerCase();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function computeVisitedStores(){const fb=new Set(books.filter(b=>b.found&&b.foundAt).map(b=>b.foundAt));return new Set([...fb,...manuallyVisitedStores]);}
+
+function sortedBooksForStore(sid){
+  return books.filter(b=>b.stores.includes(sid)||b.foundAt===sid)
+    .filter((b,i,a)=>a.findIndex(x=>x.id===b.id)===i)
+    .sort((a,b)=>PRIO[a.priority]-PRIO[b.priority]||lastName(a.author).localeCompare(lastName(b.author)));
+}
+function allBooksSorted(){
+  const uniq=new Map();books.forEach(b=>uniq.set(b.id,b));
+  const all=[...uniq.values()];
+  if(sortBy==='title') return all.sort((a,b)=>a.title.localeCompare(b.title));
+  if(sortBy==='author') return all.sort((a,b)=>lastName(a.author).localeCompare(lastName(b.author))||a.title.localeCompare(b.title));
+  if(sortBy==='genre') return all.sort((a,b)=>a.genre.localeCompare(b.genre)||a.title.localeCompare(b.title));
+  return all.sort((a,b)=>PRIO[a.priority]-PRIO[b.priority]||lastName(a.author).localeCompare(lastName(b.author)));
+}
+
+function save(){
+  localStorage.setItem('bc26v5-books-ryan',JSON.stringify(books));
+  localStorage.setItem('bc26v5-nextid-ryan',nextId);
+  localStorage.setItem('bc26v5-order-ryan',JSON.stringify(storeOrder));
+  localStorage.setItem('bc26v5-view-ryan',currentView);
+  localStorage.setItem('bc26v5-cf-ryan',cf);
+  localStorage.setItem('bc26v5-sort-ryan',sortBy);
+  localStorage.setItem('bc26v5-manual-ryan',JSON.stringify([...manuallyVisitedStores]));
+}
+function load(){
+  const sb=localStorage.getItem('bc26v5-books-ryan');
+  const si=localStorage.getItem('bc26v5-nextid-ryan');
+  const so=localStorage.getItem('bc26v5-order-ryan');
+  const sv=localStorage.getItem('bc26v5-view-ryan');
+  const sm=localStorage.getItem('bc26v5-manual-ryan');
+  books=sb?JSON.parse(sb).map(b=>({foundAt:null,...b})):JSON.parse(JSON.stringify(DEFAULT_BOOKS));
+  nextId=si?parseInt(si):0;
+  currentView=sv||'stores';
+  const scf=localStorage.getItem('bc26v5-cf-ryan');if(scf)cf=scf;
+  const sso=localStorage.getItem('bc26v5-sort-ryan');if(sso)sortBy=sso;
+  const saved=so?JSON.parse(so):null;
+  if(saved){storeOrder=saved;STORE_DEFS.forEach(s=>{if(!storeOrder.includes(s.id))storeOrder.push(s.id);});}
+  else storeOrder=STORE_DEFS.map(s=>s.id);
+  manuallyVisitedStores=sm?new Set(JSON.parse(sm)):new Set();
+  openStores=new Set();
+}
+function orderedStores(){return storeOrder.map(id=>STORE_DEFS.find(s=>s.id===id)).filter(Boolean);}
+
+// ── Shared book row builder for stores view ──
+function bookRowHTMLStore(b,sid){
+  const pc='pi-'+b.priority,sc='p-'+b.priority;
+  const chk=b.found?' checked':'',fd=b.found?' found':'';
+  const sm=b.priority==='must'?' selected':'',sn=b.priority==='nice'?' selected':'',sb2=b.priority==='bonus'?' selected':'';
+  return `<div class="swipe-wrap" data-id="${b.id}" data-store="${sid}">
+<div class="swipe-bg swipe-bg-edit" onclick="handleEdit(${b.id})">${PENCIL_SVG}</div>
+<div class="swipe-bg swipe-bg-del" onclick="handleDelete(${b.id})">${TRASH_SVG}</div>
+<div class="book-row${fd}" data-id="${b.id}" data-store="${sid}">
+<div class="check-tap" onclick="toggleFoundStore(${b.id},'${sid}')"><div class="checkbox${chk}"><span class="check-icon">${CHECK}</span></div></div>
+<div class="book-info"><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author)}</div><div class="book-genre">${esc(b.genre)}</div></div>
+<select class="priority-select ${sc}" onchange="changePriority(${b.id},this.value)"><option value="must"${sm}>Must</option><option value="nice"${sn}>Nice</option><option value="bonus"${sb2}>Bonus</option></select>
+</div></div>`;
+}
+
+// ── Book row builder for books view ──
+function bookRowHTMLBooks(b){
+  const pc='pi-'+b.priority;
+  const chk=b.found?' checked':'',fd=b.found?' found':'';
+  const sc=b.foundAt?' s-found':'';
+  const storeOptions=[...STORE_DEFS].sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.id}"${b.foundAt===s.id?' selected':''}>${s.name}</option>`).join('');
+  return `<div class="swipe-wrap" data-id="${b.id}" data-store="">
+<div class="swipe-bg swipe-bg-edit" onclick="handleEdit(${b.id})">${PENCIL_SVG}</div>
+<div class="swipe-bg swipe-bg-del" onclick="handleDelete(${b.id})">${TRASH_SVG}</div>
+<div class="book-row${fd}" data-id="${b.id}">
+<div class="book-info"><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author)}</div><div class="book-genre">${esc(b.genre)}</div></div>
+<select class="store-select${sc}" onchange="setFoundAt(${b.id},this.value)">
+<option value="">Store purchased</option>
+${storeOptions}
+</select>
+</div></div>`;
+}
+
+
+function buildStoreBooksHTML(bks,sid){
+  if(!bks.length)return'';
+  const pLabels={must:'Must-have',nice:'Nice to find',bonus:'Bonus'};
+  let out='',lastP=null;
+  bks.forEach(b=>{
+    if(b.priority!==lastP&&lastP!==null){
+      out+=`<div class="priority-divider"><span>${pLabels[b.priority]||b.priority}</span></div>`;
+    }
+    lastP=b.priority;
+    out+=bookRowHTMLStore(b,sid);
+  });
+  return out;
+}
+
+
+function buildBooksViewHTML(bks){
+  if(!bks.length)return'';
+  const pLabels={must:'Must-have',nice:'Nice to find',bonus:'Bonus'};
+  // Group books
+  const groups=[];let lastKey=null,lastLabel=null,cur=[];
+  bks.forEach(b=>{
+    let key,label;
+    if(sortBy==='priority'){key=b.priority;label=pLabels[b.priority]||b.priority;}
+    else if(sortBy==='title'){key=b.title[0].toUpperCase();label=key;}
+    else if(sortBy==='author'){key=lastName(b.author)[0].toUpperCase();label=key;}
+    else if(sortBy==='genre'){key=b.genre;label=b.genre;}
+    else{key=b.priority;label=pLabels[b.priority]||b.priority;}
+    if(key!==lastKey){if(cur.length)groups.push({label:lastLabel,books:cur});cur=[];lastKey=key;lastLabel=label;}
+    cur.push(b);
+  });
+  if(cur.length)groups.push({label:lastLabel,books:cur});
+  // Render each group as its own card
+  const totalBooks=books.filter((b,i,a)=>a.findIndex(x=>x.id===b.id)===i).length;
+  const sortOpts=['priority','title','author','genre'].map(v=>`<option value="${v}"${sortBy===v?' selected':''}>${v.charAt(0).toUpperCase()+v.slice(1)}</option>`).join('');
+  const sortDd=`<select class="sort-select sort-select-inline" onchange="setSort(this.value)">${sortOpts}</select>`;
+  return groups.map((g,gi)=>`
+<div class="books-group-label">
+  <span class="bgl-name">${esc(g.label)}</span>
+  ${gi===0?`<span class="wl-count">${totalBooks} book${totalBooks!==1?'s':''} in wish list</span>`:''}
+  ${gi===0?sortDd:''}
+</div>
+<div class="books-view-wrap">${g.books.map(b=>bookRowHTMLBooks(b)).join('')}</div>
+`).join('');
+}
+
+// ── Render ──
+function render(){
+  if(currentView==='stores') renderStoresView();
+  else renderBooksView();
+  updateStats();
+}
+
+function filterBooks(list){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  return list.filter(b=>{
+    if(q&&!b.title.toLowerCase().includes(q)&&!b.author.toLowerCase().includes(q))return false;
+    if(cf==='must')return b.priority==='must';
+    if(cf==='nice')return b.priority==='nice';
+    if(cf==='bonus')return b.priority==='bonus';
+    if(cf==='found')return b.found;
+    if(cf==='unfound')return !b.found;
+    return true;
+  });
+}
+
+function renderStoresView(){
+  document.getElementById('list-divider').style.display='block';
+  document.getElementById('store-list-header').style.display='flex';
+  document.getElementById('wishlist-count').style.display='none';
+  const container=document.getElementById('store-list');
+  let html='',any=false;
+  orderedStores().forEach(s=>{
+    const sb=filterBooks(sortedBooksForStore(s.id));
+    any=true;
+    const visited=computeVisitedStores();
+    const fc=sb.filter(b=>b.found).length,tot=sb.length,rem=tot-fc;
+    const isOpen=openStores.has(s.id),isManuallyVisited=manuallyVisitedStores.has(s.id);
+    const isDone=visited.has(s.id);
+    html+=`<div class="store-section${isDone?' store-done':''}" id="store-${s.id}" data-sid="${s.id}">
+<div class="store-header">
+<div class="drag-handle" data-sid="${s.id}">${BARS_SVG}</div>
+<div class="store-tap" onclick="toggleStore('${s.id}')">
+<div class="store-name-group"><div class="store-name">${esc(s.name)}</div>
+<button class="store-info-btn" onclick="showStoreInfo(event,'${s.id}')"><span class="info-i">i</span></button></div>
+<div class="store-right"><button class="store-visited-btn" onclick="toggleManuallyVisited(event,'${s.id}')" aria-label="Mark store as visited"><div class="visited-circle${isManuallyVisited?' checked':''}"><svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 4,8 11,1"/></svg></div></button>
+<div class="chevron${isOpen?' open':''}" id="chev-${s.id}"><svg viewBox="0 0 14 8"><polyline points="1,1 7,7 13,1"/></svg></div>
+</div></div></div>
+<div class="store-books${isOpen?' open':''}" id="books-${s.id}">${sb.map(b=>bookRowHTMLStore(b,s.id)).join('')}</div>
+</div>`;
+  });
+  container.innerHTML=html;
+  document.getElementById('empty-state').style.display=any?'none':'block';
+  activeSwipeRow=null;
+  initSwipe();
+  initDrag();
+  if(!localStorage.getItem('bc26-swipe-hinted-ryan')){
+    const first=container.querySelector('.book-row');
+    if(first){first.classList.add('swipe-hint-animate');localStorage.setItem('bc26-swipe-hinted-ryan','1');}
+  }
+}
+
+function renderBooksView(){
+  document.getElementById('list-divider').style.display='none';
+  document.getElementById('store-list-header').style.display='none';
+  document.getElementById('wishlist-count').style.display='block';
+  const container=document.getElementById('store-list');
+  const sb=filterBooks(allBooksSorted());
+  if(!sb.length){container.innerHTML='';document.getElementById('empty-state').style.display='block';return;}
+  document.getElementById('empty-state').style.display='none';
+  const total=allBooksSorted().length;
+  const wc=document.getElementById('wishlist-count');
+  if(wc)wc.style.display='none';
+  container.innerHTML=buildBooksViewHTML(sb);
+  activeSwipeRow=null;
+  initSwipe();
+  // swipe hint on first book row
+  if(!localStorage.getItem('bc26-swipe-hinted-ryan')){
+    const first=container.querySelector('.book-row');
+    if(first){first.classList.add('swipe-hint-animate');localStorage.setItem('bc26-swipe-hinted-ryan','1');}
+  }
+}
+
+function updateStats(){
+  const uniq=new Map();books.forEach(b=>uniq.set(b.id,b));const all=[...uniq.values()];
+  const found=all.filter(b=>b.found).length;
+  const mustLeft=all.filter(b=>!b.found&&b.priority==='must').length;
+  const visited=computeVisitedStores();
+  const libraryVisited=visited.has('libraryshop')||visited.has('libraryshopsd');
+  const otherLeft=['camino','ucsd','warwicks','birdrock','bookplace','meetcute','libelula','baybooks','mystgalaxy','laplaya','bluestocking','verbatim','bookcatapult','heybooks'].filter(id=>!visited.has(id)).length;
+  const storesLeft=otherLeft+(libraryVisited?0:1);
+  document.getElementById('stat-found').textContent=found;
+  document.getElementById('stat-must').textContent=mustLeft;
+  document.getElementById('stat-stores').textContent=storesLeft;
+  const totalStores=15,visitedCount=totalStores-storesLeft;
+  document.getElementById('crawl-progress-bar').style.width=Math.min(100,Math.round((visitedCount/totalStores)*100))+'%';
+}
+
+// ── Interactions ──
+function toggleManuallyVisited(e,sid){
+  e.stopPropagation();
+  const prev=storesVisitedCount();
+  const wasVisited=manuallyVisitedStores.has(sid);
+  if(wasVisited)manuallyVisitedStores.delete(sid);
+  else{manuallyVisitedStores.add(sid);launchConfetti();}
+  const next=storesVisitedCount();
+  checkMilestones(prev,next);
+  save();render();
+  if(!wasVisited){
+    const def=STORE_DEFS.find(s=>s.id===sid);
+    showUndo((def?def.name:'Store')+' marked as visited',function(){
+      manuallyVisitedStores.delete(sid);save();render();
+    });
+  }
+}
+function setView(v){
+  currentView=v;
+  document.getElementById('vtab-stores').classList.toggle('active',v==='stores');
+  document.getElementById('vtab-books').classList.toggle('active',v==='books');
+  document.getElementById('view-subtitle').textContent=v==='stores'?'At a store? Find what to grab here.':'On the move? Track what you’ve found.';
+  save();render();
+}
+
+function closeActiveSwipe(){
+  if(!activeSwipeRow)return;
+  const row=activeSwipeRow.querySelector('.book-row');
+  if(row){row.classList.add('animating');row.style.transform='';setTimeout(()=>row.classList.remove('animating'),220);}
+  activeSwipeRow=null;
+}
+function handleDelete(id){
+  closeActiveSwipe();
+  const idx=books.findIndex(b=>b.id===id);
+  if(idx===-1)return;
+  const deleted=books[idx];
+  books.splice(idx,1);
+  save();render();
+  showUndo('Deleted “'+deleted.title+'”',function(){
+    books.splice(idx,0,deleted);
+    save();render();
+  });
+}
+function handleEdit(id){closeActiveSwipe();openEditModal(id);}
+
+function toggleFoundStore(id,sid){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  const prev=storesVisitedCount();
+  const wasNew=!b.found&&!computeVisitedStores().has(sid);
+  const wasPrev={found:b.found,foundAt:b.foundAt};
+  b.found=!b.found;
+  b.foundAt=b.found?sid:null;
+  if(b.found&&wasNew)launchConfetti();
+  const next=storesVisitedCount();
+  checkMilestones(prev,next);
+  save();render();
+  if(b.found){
+    showUndo('Marked "'+b.title+'" as found',function(){
+      b.found=wasPrev.found;b.foundAt=wasPrev.foundAt;save();render();
+    });
+  }
+}
+
+function toggleFoundBooks(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  b.found=!b.found;
+  if(!b.found)b.foundAt=null;
+  save();render();
+}
+
+function setFoundAt(id,storeId){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  const prev=storesVisitedCount();
+  const wasFound=b.found;
+  const wasNew=storeId&&!computeVisitedStores().has(storeId);
+  if(storeId){b.found=true;b.foundAt=storeId;}
+  else{b.found=false;b.foundAt=null;}
+  if(wasNew)launchConfetti();
+  const next=storesVisitedCount();
+  checkMilestones(prev,next);
+  save();render();
+  if(storeId&&!wasFound){
+    setTimeout(()=>{
+      const row=document.querySelector('.book-row[data-id="'+id+'"]');
+      if(row){row.classList.add('flash-found');setTimeout(()=>row.classList.remove('flash-found'),800);}
+    },60);
+    const def=STORE_DEFS.find(s=>s.id===storeId);
+    const storeName=def?def.name:'that store';
+    showUndo('Found at '+storeName,function(){
+      b.found=false;b.foundAt=null;save();render();
+    });
+  }
+}
+
+function changePriority(id,val){const b=books.find(x=>x.id===id);if(!b)return;b.priority=val;save();render();}
+
+function toggleStore(id){
+  if(openStores.has(id))openStores.delete(id);else openStores.add(id);
+  const el=document.getElementById('books-'+id),chev=document.getElementById('chev-'+id);
+  if(el)el.classList.toggle('open');if(chev)chev.classList.toggle('open');
+}
+function setFilter(f){cf=f;document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f===f)c.classList.add('a-'+f);});render();}
+function applyFilter(){
+  render();
+  var sq=(document.getElementById('search').value||'').trim();
+  if(sq){
+    var matches=filterBooks(books);
+    if(matches.length===0){
+      var m=document.getElementById('no-results-modal');
+      var msg=document.getElementById('no-results-msg');
+      if(msg)msg.textContent='"'+sq+'" is not on your list yet. Try searching a store catalog to find it.';
+      if(m)m.style.display='flex';
+    }
+  }
+  if(currentView==='stores'){
+    const q=(document.getElementById('search').value||'').toLowerCase();
+    if(!q)return;
+    // open all stores that have matching books
+    orderedStores().forEach(s=>{
+      const sb=filterBooks(sortedBooksForStore(s.id));
+      if(sb.length){
+        openStores.add(s.id);
+        const el=document.getElementById('books-'+s.id);
+        const chev=document.getElementById('chev-'+s.id);
+        if(el)el.classList.add('open');
+        if(chev)chev.classList.add('open');
+      }
+    });
+    // scroll to first store+book that matches
+    var firstMatchStore=null,firstMatchBook=null;
+    orderedStores().forEach(function(s){
+      if(!firstMatchStore){
+        var mb=filterBooks(sortedBooksForStore(s.id));
+        if(mb.length>0){firstMatchStore=s.id;firstMatchBook=mb[0].id;}
+      }
+    });
+    if(firstMatchStore){
+      setTimeout(function(){scrollToStoreBook(firstMatchStore,firstMatchBook);},120);
+    }
+  }
+}
+function setSort(s){sortBy=s;save();renderBooksView();updateStats();}
+function clearFilter(){cf='all';document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f==='all')c.classList.add('a-all');});document.getElementById('search').value='';render();}
+
+// ── Swipe ──
+function initSwipe(){
+  document.querySelectorAll('.swipe-wrap').forEach(wrap=>{
+    const row=wrap.querySelector('.book-row');
+    let sx=0,sy=0,dx=0,decided=false,horiz=false,open=false;
+    wrap.addEventListener('touchstart',e=>{
+      if(activeSwipeRow&&activeSwipeRow!==wrap)closeActiveSwipe();
+      sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;decided=false;horiz=false;
+      open=row.classList.contains('slide-left')||row.classList.contains('slide-right');
+      if(open)dx=row.classList.contains('slide-left')?-80:80;
+      row.classList.remove('animating');
+    },{passive:true});
+    wrap.addEventListener('touchmove',e=>{
+      const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+      const adx=Math.abs(cx-sx),ady=Math.abs(cy-sy);
+      if(!decided&&(adx>5||ady>5)){decided=true;horiz=adx>ady*1.2;}
+      if(!horiz)return;
+      e.preventDefault();
+      row.style.transform=`translateX(${Math.max(-80,Math.min(80,(cx-sx)+(open?dx:0)))}px)`;
+    },{passive:false});
+    wrap.addEventListener('touchend',e=>{
+      if(!horiz)return;
+      const raw=(e.changedTouches[0].clientX-sx)+(open?dx:0);
+      row.classList.add('animating');
+      if(raw<-45){row.style.transform='translateX(-80px)';row.classList.remove('slide-right');row.classList.add('slide-left');activeSwipeRow=wrap;}
+      else if(raw>45){row.style.transform='translateX(80px)';row.classList.remove('slide-left');row.classList.add('slide-right');activeSwipeRow=wrap;}
+      else{row.style.transform='';row.classList.remove('slide-left','slide-right');activeSwipeRow=null;}
+      setTimeout(()=>row.classList.remove('animating'),220);
+    },{passive:true});
+  });
+  document.getElementById('store-list').addEventListener('touchstart',e=>{
+    if(activeSwipeRow&&!activeSwipeRow.contains(e.target))closeActiveSwipe();
+  },{passive:true});
+}
+
+// ── Drag to reorder ──
+function initDrag(){
+  const container=document.getElementById('store-list');
+  let ghost=null,dragSid=null,overSid=null;
+  function getSections(){return[...container.querySelectorAll('.store-section')];}
+  function removeGhost(){if(ghost){ghost.remove();ghost=null;}}
+  function clearOver(){getSections().forEach(s=>s.classList.remove('drag-over-top','drag-over-bottom'));}
+  container.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.addEventListener('touchstart',e=>{
+      e.stopPropagation();
+      dragSid=handle.dataset.sid;
+      const section=document.getElementById('store-'+dragSid);
+      const rect=section.getBoundingClientRect();
+      section.classList.add('dragging');
+      ghost=document.createElement('div');
+      ghost.className='drag-ghost';
+      ghost.style.top=rect.top+'px';
+      const def=STORE_DEFS.find(s=>s.id===dragSid);
+      ghost.innerHTML=`${BARS_SVG}<div class="drag-ghost-name">${def?esc(def.name):''}</div>`;
+      document.body.appendChild(ghost);
+      document.addEventListener('touchmove',onMove,{passive:false});
+      document.addEventListener('touchend',onEnd,{passive:true});
+    },{passive:true});
+  });
+  function onMove(e){
+    if(!dragSid)return;e.preventDefault();
+    const y=e.touches[0].clientY;
+    if(ghost)ghost.style.top=y-28+'px';
+    clearOver();overSid=null;
+    const sections=getSections().filter(s=>s.dataset.sid!==dragSid);
+    for(const s of sections){
+      const rect=s.getBoundingClientRect();
+      if(y<rect.top+rect.height/2){s.classList.add('drag-over-top');overSid=s.dataset.sid;break;}
+      else{s.classList.remove('drag-over-top');s.classList.add('drag-over-bottom');overSid='after:'+s.dataset.sid;}
+    }
+  }
+  function onEnd(){
+    if(!dragSid)return;
+    removeGhost();clearOver();
+    const section=document.getElementById('store-'+dragSid);
+    if(section)section.classList.remove('dragging');
+    if(overSid){
+      const fi=storeOrder.indexOf(dragSid);storeOrder.splice(fi,1);
+      if(overSid.startsWith('after:')){const ti=storeOrder.indexOf(overSid.replace('after:',''));storeOrder.splice(ti+1,0,dragSid);}
+      else{const ti=storeOrder.indexOf(overSid);storeOrder.splice(ti,0,dragSid);}
+    }
+    dragSid=null;overSid=null;
+    document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('touchend',onEnd);
+    save();render();
+  }
+}
+
+// ── Info modal ──
+function openInfoModal(){document.getElementById('info-overlay').classList.add('open');document.body.classList.add('modal-open');}
+function closeInfoModal(){
+  const modal=document.getElementById('info-modal');
+  modal.style.transform='translateY(110%)';
+  setTimeout(()=>{document.getElementById('info-overlay').classList.remove('open');modal.style.transform='';document.body.classList.remove('modal-open');},350);
+}
+function infoOverlayClick(e){if(e.target===document.getElementById('info-overlay'))closeInfoModal();}
+
+function showHowTo(){
+  document.getElementById('info-modal-content').innerHTML=`
+<div class="howto-section">
+  <div class="howto-heading">Books</div>
+  <div class="howto-body" style="flex-direction:column;align-items:flex-start;gap:10px"><div>Swipe left and press <span class="howto-icon" style="background:var(--must)">${TRASH_SVG.replace('stroke="currentColor"','stroke="#fff"')}</span> to delete</div><div>Swipe right and press <span class="howto-icon" style="background:var(--edit-bg)">${PENCIL_SVG.replace('stroke="currentColor"','stroke="#fff"')}</span> to edit</div></div>
+</div>
+<div class="howto-section">
+  <div class="howto-heading">Stores &nbsp;<span style="font-size:12px;font-weight:400;color:var(--ink-60)">(in <svg style="width:13px;height:13px;vertical-align:middle;display:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11h14v10"/><path d="M9 21v-5h6v5"/></svg> By stores only)</span></div>
+  <div class="howto-body" style="flex-direction:column;align-items:flex-start;gap:10px"><div>To reorder, hold and drag the <span class="howto-icon">${BARS_SVG}</span> handle</div><div>Tap <span class="howto-icon howto-icon-circle" style="background:var(--ink)"><svg width="11" height="9" viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 4,8 11,1"/></svg></span> to mark a store visited without a list book</div></div>
+</div>`;
+  openInfoModal();
+}
+
+function showStoreInfo(e,sid){
+  e.stopPropagation();
+  const info=STORE_INFO[sid],def=STORE_DEFS.find(s=>s.id===sid);
+  if(!info||!def)return;
+  const addrEncoded=encodeURIComponent(info.address);
+  const invMap={new:'New books',used:'Used books',both:'New & used books'};
+  const inventory=invMap[def.type]||'';
+  document.getElementById('info-modal-content').innerHTML=`
+<div class="si-store-name">${esc(def.name)}</div>
+${(()=>{const st=getStoreStatus(info.hours);return st?'<div class="store-status '+st.cls+'">'+st.text+'</div>':''})()}
+<div class="si-row"><div class="si-label">Inventory</div><div class="si-value">${inventory}</div></div>
+<div class="si-row"><div class="si-label">Event hours</div><div class="si-value">${esc(info.hours)}</div></div>
+<div class="si-row"><div class="si-label">Contact</div><div class="si-value"><a href="tel:${info.tel}">${esc(info.phone)}</a></div></div>
+<div class="si-row"><div class="si-label">Address</div><div class="si-value">${esc(info.address)}</div></div>
+<div class="si-maps-row"><a class="si-map-btn" href="https://maps.apple.com/?q=${addrEncoded}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Apple Maps</a><a class="si-map-btn" href="https://maps.google.com/?q=${addrEncoded}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Google Maps</a></div>
+${info.note?LIB_NOTE:''}
+${info.callForInventory?`<a class="si-search-btn si-call-btn" href="tel:${info.tel}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.09-1.09a2 2 0 012.11-.45c.9.34 1.85.58 2.81.7A2 2 0 0122 14.92z"/></svg> Call for inventory &nbsp;&middot;&nbsp; ${info.phone}</a>`:info.searchUrl?`<a class="si-search-btn" href="${info.searchUrl+(document.getElementById('search').value?encodeURIComponent(document.getElementById('search').value):'')+(info.searchUrlSuffix||'')}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search ${esc(def.name)}’s catalog</a>`:''}
+`;
+  openInfoModal();
+}
+
+(function(){
+  const modal=document.getElementById('info-modal');
+  let sy=0,dragging=false;
+  modal.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;dragging=false;},{passive:true});
+  modal.addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-sy;if(dy>0&&modal.scrollTop<=0){dragging=true;modal.style.transition='none';modal.style.transform=`translateY(${dy}px)`;e.preventDefault();}},{passive:false});
+  modal.addEventListener('touchend',e=>{modal.style.transition='';if(dragging&&(e.changedTouches[0].clientY-sy)>90)closeInfoModal();else modal.style.transform='';dragging=false;},{passive:true});
+})();
+
+// ── Book modal ──
+let selectedPriority='must',selectedStores=new Set();
+function openModal(){
+  editingBookId=null;
+  document.getElementById('modal-title').textContent='Add a book';
+  document.getElementById('btn-submit').textContent='Add book';
+  document.getElementById('f-title').value='';
+  document.getElementById('f-author').value='';
+  document.getElementById('f-genre').value='';
+  selectedPriority='must';selectedStores=new Set();
+  document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p==='must')t.classList.add('sel-must');});
+  buildStoreGrid();
+  document.getElementById('book-overlay').classList.add('open');
+  document.body.classList.add('modal-open');
+  setTimeout(()=>document.getElementById('f-title').focus(),400);
+}
+function openEditModal(id){
+  const b=books.find(x=>x.id===id);if(!b)return;
+  editingBookId=id;
+  document.getElementById('modal-title').textContent='Edit book';
+  document.getElementById('btn-submit').textContent='Save changes';
+  document.getElementById('f-title').value=b.title;
+  document.getElementById('f-author').value=b.author;
+  document.getElementById('f-genre').value=b.genre;
+  selectedPriority=b.priority;selectedStores=new Set(b.stores);
+  document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p===b.priority)t.classList.add('sel-'+b.priority);});
+  buildStoreGrid();
+  document.getElementById('book-overlay').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeBookModal(){
+  const modal=document.getElementById('book-modal');
+  modal.style.transform='translateY(110%)';
+  setTimeout(()=>{document.getElementById('book-overlay').classList.remove('open');modal.style.transform='';document.body.classList.remove('modal-open');},350);
+}
+function bookOverlayClick(e){if(e.target===document.getElementById('book-overlay'))closeBookModal();}
+function buildStoreGrid(){
+  document.getElementById('store-grid').innerHTML=STORE_DEFS.map(s=>
+    `<button class="store-toggle${selectedStores.has(s.id)?' sel':''}" onclick="toggleStoreSelect('${s.id}')">${s.name}</button>`
+  ).join('');
+}
+function toggleStoreSelect(id){if(selectedStores.has(id))selectedStores.delete(id);else selectedStores.add(id);buildStoreGrid();}
+function selectPriority(p){selectedPriority=p;document.querySelectorAll('.ptab').forEach(t=>{t.className='ptab';if(t.dataset.p===p)t.classList.add('sel-'+p);});}
+function submitBook(){
+  const title=document.getElementById('f-title').value.trim();
+  const author=document.getElementById('f-author').value.trim();
+  const genre=document.getElementById('f-genre').value.trim();
+  if(!title||!author){alert('Please enter at least a title and author.');return;}
+  if(editingBookId!==null){
+    const b=books.find(x=>x.id===editingBookId);
+    if(b){b.title=title;b.author=author;b.genre=genre||'General';b.priority=selectedPriority;b.stores=[...selectedStores];}
+    editingBookId=null;
+  } else {
+    books.push({id:nextId++,title,author,genre:genre||'General',priority:selectedPriority,stores:[...selectedStores],found:false,foundAt:null});
+  }
+  save();closeBookModal();setTimeout(render,360);
+}
+
+(function(){
+  const modal=document.getElementById('book-modal');
+  let sy=0,dragging=false;
+  modal.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;dragging=false;},{passive:true});
+  modal.addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-sy;if(dy>0&&modal.scrollTop<=0){dragging=true;modal.style.transition='none';modal.style.transform=`translateY(${dy}px)`;e.preventDefault();}},{passive:false});
+  modal.addEventListener('touchend',e=>{modal.style.transition='';if(dragging&&(e.changedTouches[0].clientY-sy)>90)closeBookModal();else modal.style.transform='';dragging=false;},{passive:true});
+})();
+
+
+
+function timeToMins(t){
+  var m=t.match(/(\d+)(?::(\d+))?(am|pm)/i);if(!m)return null;
+  var h=parseInt(m[1]),mn=parseInt(m[2]||'0'),ap=m[3].toLowerCase();
+  if(ap==='pm'&&h!==12)h+=12;if(ap==='am'&&h===12)h=0;
+  return h*60+mn;
+}
+function parseSegTime(seg){
+  var m=seg.match(/(\d+(?::\d+)?(?:am|pm))\s*-\s*(\d+(?::\d+)?(?:am|pm))/i);
+  return m?{open:m[1],close:m[2]}:null;
+}
+function getStoreStatus(hoursStr){
+  var now=new Date(),dayIdx=now.getDay();
+  var dayMap={0:'Sun',1:'Mon',6:'Sat'};
+  var dayStr=dayMap[dayIdx];
+  // Not a crawl day — find Saturday hours and show opening time
+  if(!dayStr){
+    var satSegs=hoursStr.split(','),satRange=null;
+    for(var j=0;j<satSegs.length;j++){if(satSegs[j].includes('Sat')){satRange=parseSegTime(satSegs[j]);if(satRange)break;}}
+    return satRange?{cls:'status-closed',text:'Event opens Sat at '+satRange.open}:null;
+  }
+  var segs=hoursStr.split(','),range=null;
+  for(var i=0;i<segs.length;i++){if(segs[i].includes(dayStr)){range=parseSegTime(segs[i]);if(range)break;}}
+  if(!range)return null;
+  var nowM=now.getHours()*60+now.getMinutes();
+  var openM=timeToMins(range.open),closeM=timeToMins(range.close);
+  if(nowM<openM){var diff=openM-nowM,h=Math.floor(diff/60),m=diff%60;return{cls:'status-closed',text:h>0?'Opens in '+h+'h'+(m?' '+m+'m':''):'Opens in '+m+'m'};}
+  if(nowM>=openM&&nowM<closeM){var diff2=closeM-nowM;return diff2<=60?{cls:'status-closing',text:'Closing soon \u00b7 '+range.close}:{cls:'status-open',text:'Open until '+range.close};}
+  return{cls:'status-closed',text:'Closed for today'};
+}
+
+
+// ── Undo (dynamic stacking) ──
+var _undoCount=0;
+function showUndo(msg,fn){
+  var id='ut-'+(++_undoCount);
+  var t=document.createElement('div');
+  t.className='undo-toast';
+  t.id=id;
+  t.innerHTML='<span class="undo-toast-msg">'+msg+'</span><button class="undo-toast-btn" onclick="doUndoById(\''+id+'\')">Undo</button>';
+  t._undoFn=fn;
+  var stack=document.getElementById('toast-stack');
+  stack.appendChild(t);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){t.classList.add('show');});});
+  t._timer=setTimeout(function(){dismissUndoToast(t);},8000);
+}
+function dismissUndoToast(t){
+  if(t._timer){clearTimeout(t._timer);t._timer=null;}
+  t.classList.remove('show');
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},350);
+}
+function doUndoById(id){
+  var t=document.getElementById(id);
+  if(!t)return;
+  if(t._undoFn){t._undoFn();t._undoFn=null;}
+  dismissUndoToast(t);
+}
+// legacy compat
+function doUndo(){doUndoById(document.querySelector('.undo-toast.show')&&document.querySelector('.undo-toast.show').id);}
+
+
+// ── Search panel ──
+// store search index for quick lookup from panel
+var _storeSearchIdx=[];
+function buildStoreSearchIdx(){
+  _storeSearchIdx=STORE_DEFS.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).map(function(s,i){return {id:s.id,name:s.name,idx:i};});
+}
+function showSearchPanel(){
+  if(!_storeSearchIdx.length)buildStoreSearchIdx();
+  var q=(document.getElementById('search').value||'').trim();
+  var panel=document.getElementById('search-panel');
+  // set top to bottom of header + chips
+
+  var ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M5 21V11h14v10"/><path d="M9 21v-5h6v5"/></svg>';
+  var ARROW='<svg viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8,1 13,5 8,9"/><line x1="0" y1="5" x2="13" y2="5"/></svg>';
+  var storeRows=_storeSearchIdx.map(function(s){
+    return '<div class="sp-store-row" data-sid="'+s.id+'"><div class="sp-store-icon">'+ICON+'</div><div class="sp-store-name">'+esc(s.name)+'</div><div class="sp-store-arrow">'+ARROW+'</div></div>';
+  }).join('');
+  var qLabel=q?(' for “'+esc(q)+'”'):'';
+  panel.innerHTML=
+    '<div class="sp-top-row"><div class="sp-section-label" style="margin:0">Search</div><button class="sp-close-btn" onclick="closeSearchPanel()" aria-label="Close search">×</button></div>'+
+    '<div class="sp-my-list" id="sp-my-list-btn">'+
+      '<div class="sp-my-list-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#EEF4A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'+
+      '<div><div class="sp-my-list-text">'+(q?'Search my list for '+qLabel:'Search My List')+'</div>'+
+      '<div class="sp-my-list-sub">Search within your saved books</div></div>'+
+    '</div>'+
+    '<div class="sp-section-label">Search a store’s catalog (inventory will vary)</div>'+
+    storeRows;
+  // set height to fill viewport below the panel's top edge
+  var panelTop=panel.getBoundingClientRect().top;
+  panel.style.height=(window.innerHeight-panelTop)+'px';
+  panel.style.display='block';
+  panel.scrollTop=0;
+  document.getElementById('search-backdrop').style.display='block';
+
+  // bind clicks via event delegation
+  panel.onclick=function(e){
+    var myList=e.target.closest('#sp-my-list-btn');
+    if(myList){document.getElementById('search').blur();closeSearchPanel();return;}
+    var row=e.target.closest('.sp-store-row');
+    if(row){
+      var sid=row.dataset.sid;
+      var sinfo=STORE_INFO[sid];
+      if(sinfo&&sinfo.callForInventory){
+        closeSearchPanel();
+        var def=STORE_DEFS.find(function(s){return s.id===sid;});
+        document.querySelector('.call-inv-title').textContent=def?def.name:'This store';
+        var link=document.getElementById('call-inv-link');
+        link.href='tel:'+sinfo.tel;
+        link.textContent=sinfo.phone;
+        document.getElementById('call-inventory-modal').style.display='flex';
+      } else if(sinfo&&sinfo.searchUrl){
+        var curQ=(document.getElementById('search').value||'').trim();
+        var suffix=sinfo.searchUrlSuffix||'';
+        window.open(sinfo.searchUrl+(curQ?encodeURIComponent(curQ):'')+suffix,'_blank');
+        closeSearchPanel();
+      } else {
+        closeSearchPanel();
+      }
+    }
+  };
+}
+function closePanelIfOutside(e){
+  var panel=document.getElementById('search-panel');
+  if(!panel||panel.style.display==='none')return;
+  var input=document.getElementById('search');
+  if(!panel.contains(e.target)&&e.target!==input){closeSearchPanel();}
+}
+function toggleClearBtn(){
+  var v=document.getElementById('search').value;
+  var btn=document.getElementById('search-clear-btn');
+  if(btn)btn.style.display=v?'block':'none';
+}
+function clearSearch(){
+  document.getElementById('search').value='';
+  toggleClearBtn();
+  closeSearchPanel();
+  applyFilter();
+}
+function handleSearchKey(e){
+  if(e.key==='Enter'||e.keyCode===13){
+    e.preventDefault();
+    document.getElementById('search').blur();
+  }
+}
+function closeSearchPanel(){
+  var p=document.getElementById('search-panel');p.style.display='none';p.style.height='';
+  document.getElementById('search-backdrop').style.display='none';
+  applyFilter();
+}
+function openStoreSearch(sid,qEncoded){
+  closeSearchPanel();
+  var sinfo=STORE_INFO[sid];
+  if(!sinfo||!sinfo.searchUrl)return;
+  var q=decodeURIComponent(qEncoded);
+  window.open(sinfo.searchUrl+(q?q:''),'_blank');
+}
+// Close panel on tap outside
+document.querySelector('.sticky-head').addEventListener('click',closePanelIfOutside);
+document.querySelector('.sticky-head').addEventListener('touchstart',closePanelIfOutside,{passive:true});
+document.addEventListener('touchstart',function(e){
+  var panel=document.getElementById('search-panel');
+  var search=document.getElementById('search');
+  if(panel&&panel.style.display!=='none'&&!panel.contains(e.target)&&e.target!==search){
+    closeSearchPanel();
+  }
+},{passive:true});
+
+
+function scrollToStoreBook(storeId, bookId){
+  var head=document.querySelector('.sticky-head');
+  var headH=head?head.offsetHeight:0;
+  var filterH=document.querySelector('.filter-chips')?document.querySelector('.filter-chips').offsetHeight:0;
+  var offset=headH+filterH+8;
+  var target=bookId?document.querySelector('[data-id="'+bookId+'"][data-store="'+storeId+'"]'):document.getElementById('store-'+storeId);
+  if(!target)target=document.getElementById('store-'+storeId);
+  if(!target)return;
+  var rect=target.getBoundingClientRect();
+  window.scrollBy({top:rect.top-offset,behavior:'smooth'});
+}
+
+// ── Confetti ──
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  canvas.style.display='block';
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const ctx=canvas.getContext('2d');
+  const colors=['#EEF4A9','#E24B4A','#EF9F27','#639922','#1a7f4b','#fff','#1B1B1B'];
+  const pieces=[];
+  const count=300;
+  for(let i=0;i<count;i++){
+    // Stagger y across full screen height so coverage is immediate
+    const startY = i < count*0.5
+      ? -10 - Math.random()*canvas.height*0.4   // half start above screen
+      : Math.random()*canvas.height;             // half already distributed on screen
+    const spd = 1.8 + Math.random()*2.2;
+    pieces.push({
+      x:Math.random()*canvas.width,
+      y:startY,
+      w:8+Math.random()*10,h:5+Math.random()*7,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      rot:Math.random()*360,rotSpeed:(Math.random()-0.5)*7,
+      vx:(Math.random()-0.5)*3,
+      vy:spd,
+      alpha:1
+    });
+  }
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    pieces.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotSpeed;p.vy+=0.05;
+      if(p.y<canvas.height+20)alive=true;
+      if(p.y>canvas.height+20)p.alpha=Math.max(0,p.alpha-0.03);
+      if(p.alpha<=0)return;
+      ctx.save();ctx.globalAlpha=p.alpha;
+      ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    if(alive&&frame++<600)requestAnimationFrame(draw);
+    else{ctx.clearRect(0,0,canvas.width,canvas.height);canvas.style.display='none';}
+  }
+  draw();
+}
+
+// ── Prize toast ──
+function showPrizeToast(msg){
+  const t=document.getElementById('prize-toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),7500);
+}
+
+function checkMilestones(prevCount,newCount){
+  if(prevCount<3&&newCount>=3){
+    setTimeout(()=>showPrizeToast('🎉 3 stores done! Don’t forget to pick up your first prize! THE STICKER!'),600);
+  } else if(prevCount<6&&newCount>=6){
+    setTimeout(()=>showPrizeToast('🎉 6 stores done! Don’t forget to pick up your second prize! THE PATCH!'),600);
+  } else if(prevCount<9&&newCount>=9){
+    setTimeout(()=>showPrizeToast('🎉 9 stores done! Don’t forget to pick up your third prize! THE PIN!'),600);
+  } else if(prevCount<12&&newCount>=12){
+    setTimeout(()=>showPrizeToast('🎉 12 stores done! Don’t forget to pick up your FINAL prize! THE MESSENGER BAG!'),600);
+  }
+}
+
+function storesVisitedCount(){
+  const v=computeVisitedStores();
+  const libV=v.has('libraryshop')||v.has('libraryshopsd');
+  const other=['camino','ucsd','warwicks','birdrock','bookplace','meetcute','libelula','baybooks','mystgalaxy','laplaya','bluestocking','verbatim','bookcatapult','heybooks'].filter(id=>v.has(id)).length;
+  return other+(libV?1:0);
+}
+
+// ── Splash tutorial ──
+(function(){
+  var TOTAL=8,cur=0;
+  function buildDots(){
+    var c=document.getElementById('splash-dots');
+    if(!c)return;
+    c.innerHTML='';
+    for(var i=0;i<TOTAL;i++){
+      var d=document.createElement('div');
+      d.className='splash-dot'+(i===0?' active':'');
+      (function(idx){d.onclick=function(){goTo(idx);};})(i);
+      c.appendChild(d);
+    }
+  }
+  function goTo(idx){
+    var slides=document.querySelectorAll('.splash-slide');
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('exit');
+    (function(c){setTimeout(function(){slides[c].classList.remove('exit');},350);})(cur);
+    cur=idx;
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.splash-dot').forEach(function(d,i){d.classList.toggle('active',i===cur);});
+    var btn=document.getElementById('splash-next-btn');
+    if(btn)btn.style.display=cur===TOTAL-1?'none':'';
+  }
+  window.splashNext=function(){if(cur<TOTAL-1)goTo(cur+1);};
+  window.closeSplash=function(){
+    var el=document.getElementById('splash-overlay');
+    if(el)el.style.display='none';
+    localStorage.setItem('bc26-splash-seen-ryan','1');
+    if(typeof render==='function')render();
+  };
+  window._initSplash=function(){
+    if(localStorage.getItem('bc26-splash-seen-ryan'))return;
+    buildDots();
+    var el=document.getElementById('splash-overlay');
+    if(el)el.style.display='flex';
+  };
+})();
+
+function openMenu(){
+  document.getElementById('menu-overlay').classList.add('open');
+  document.getElementById('menu-drawer').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeMenu(){
+  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('menu-drawer').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+function replayTutorial(){
+  closeMenu();
+  localStorage.removeItem('bc26-splash-seen-ryan');
+  setTimeout(function(){
+    if(window._initSplash)window._initSplash();
+  },350);
+}
+
+// ── Genre migration ──
+(function(){
+  var gmap={
+    'Self-Help / Habits':'Self-Help / Personal Development',
+    'Finance / Psychology':'Self-Help / Personal Development',
+    'Memoir / Psychology':'Memoir / Biography',
+    'Creativity / Design':'Design',
+    'Design / Innovation':'Design',
+    'Business / Entrepreneurship':'Business',
+    'Business / Systems':'Business',
+    'Business / Marketing':'Business',
+    'Business / Startups':'Business',
+    'Business / Positioning':'Business',
+    'Business / Philosophy':'Philosophy',
+    'Literary Fiction':'Contemporary / Literary Fiction',
+    'Psychological Thriller':'Mystery / Thriller',
+    'Sci-Fi / Thriller':'Science Fiction',
+    'Psychology / Relationships':'Psychology',
+    'Memoir':'Memoir / Biography'
+  };
+  var key='bc26v5-books-ryan';
+  var raw=localStorage.getItem(key);
+  if(!raw)return;
+  try{
+    var bks=JSON.parse(raw);
+    var changed=false;
+    bks.forEach(function(b){
+      if(gmap[b.genre]){b.genre=gmap[b.genre];changed=true;}
+    });
+    if(changed)localStorage.setItem(key,JSON.stringify(bks));
+  }catch(e){}
+})();
+
+load();
+// Sync tab UI to match loaded currentView
+document.getElementById('vtab-stores').classList.toggle('active',currentView==='stores');
+document.getElementById('vtab-books').classList.toggle('active',currentView==='books');
+document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f===cf)c.classList.add('a-'+cf);});
+if(window._initSplash)window._initSplash();
+document.getElementById('view-subtitle').textContent=currentView==='stores'?'At a store? Find what to grab here.':'On the move? Track what you’ve found.';
+render();
+</script>
+
+<!-- Splash tutorial overlay -->
+<div id="splash-overlay" style="display:none">
+  <div class="splash-inner">
+    <button class="splash-close" onclick="closeSplash()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="2" y1="2" x2="16" y2="16" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="2" x2="2" y2="16" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="splash-slides" id="splash-slides">
+
+      <!-- Slide 0: Welcome -->
+      <div class="splash-slide active">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="38" stroke="#EEF4A9" stroke-width="2"/>
+            <text x="40" y="52" text-anchor="middle" font-size="36">📚</text>
+          </svg>
+        </div>
+        <div class="splash-headline">Welcome!</div>
+        <div class="splash-body">A quick tour of your Book Crawl companion — it only takes a minute.</div>
+      </div>
+
+      <!-- Slide 1: By Stores -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="8" y="28" width="64" height="42" rx="6" fill="#EEF4A9" fill-opacity=".15" stroke="#EEF4A9" stroke-width="1.5"/>
+            <path d="M8 34l4-18h56l4 18" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="28" y="48" width="24" height="22" rx="3" fill="#EEF4A9" fill-opacity=".3"/>
+            <circle cx="21" cy="34" r="5" stroke="#EEF4A9" stroke-width="1.5"/>
+            <circle cx="40" cy="34" r="5" stroke="#EEF4A9" stroke-width="1.5"/>
+            <circle cx="59" cy="34" r="5" stroke="#EEF4A9" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="splash-headline">By Stores</div>
+        <div class="splash-body">See every bookstore on the crawl. Tap a store to expand it and see which books on your list are likely there. Use the <strong>≡ handle</strong> to reorder stops to match your route.</div>
+      </div>
+
+      <!-- Slide 2: By Books -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="14" y="10" width="38" height="52" rx="4" fill="#EEF4A9" fill-opacity=".15" stroke="#EEF4A9" stroke-width="1.5"/>
+            <path d="M14 14c0-2.2 1.8-4 4-4h30a4 4 0 0 1 4 4v48H18a4 4 0 0 1-4-4V14z" stroke="#EEF4A9" stroke-width="1.5"/>
+            <line x1="22" y1="26" x2="44" y2="26" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="22" y1="34" x2="44" y2="34" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="22" y1="42" x2="36" y2="42" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="46" y="46" width="22" height="22" rx="4" fill="#1B1B1B" stroke="#EEF4A9" stroke-width="1.5"/>
+            <line x1="57" y1="52" x2="57" y2="62" stroke="#EEF4A9" stroke-width="2" stroke-linecap="round"/>
+            <line x1="52" y1="57" x2="62" y2="57" stroke="#EEF4A9" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="splash-headline">By Books</div>
+        <div class="splash-body">See your full wish list in one place sorted by priority. Tap <strong>+</strong> to add a book with its title, author, genre, and which stores likely carry it.</div>
+      </div>
+
+      <!-- Slide 3: Marking off in Stores tab -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="8" y="20" width="64" height="40" rx="8" fill="#EEF4A9" fill-opacity=".1" stroke="#EEF4A9" stroke-width="1.5"/>
+            <rect x="18" y="32" width="20" height="20" rx="4" fill="#1B1B1B" stroke="#EEF4A9" stroke-width="1.5"/>
+            <polyline points="22,42 26,46 34,36" stroke="#EEF4A9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="46" y1="36" x2="62" y2="36" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+            <line x1="46" y1="42" x2="56" y2="42" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+          </svg>
+        </div>
+        <div class="splash-headline">Marking off in By Stores</div>
+        <div class="splash-body">Standing in a store? Tap the <strong>checkbox</strong> next to a book to mark it found. It automatically records which store you bought it at and fades the row out.</div>
+      </div>
+
+      <!-- Slide 4: Marking off in Books tab -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="8" y="18" width="64" height="44" rx="8" fill="#EEF4A9" fill-opacity=".1" stroke="#EEF4A9" stroke-width="1.5"/>
+            <rect x="3" y="32" width="6" height="24" rx="2" fill="#E24B4A"/>
+            <line x1="18" y1="30" x2="40" y2="30" stroke="#EEF4A9" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="18" y1="37" x2="34" y2="37" stroke="#EEF4A9" stroke-width="1" stroke-linecap="round" opacity=".5"/>
+            <rect x="46" y="26" width="22" height="18" rx="4" fill="#e0f2ea" stroke="#1a7f4b" stroke-width="1.5"/>
+            <line x1="52" y1="33" x2="62" y2="33" stroke="#1a7f4b" stroke-width="1" stroke-linecap="round" opacity=".7"/>
+            <polyline points="60,30 64,33 60,36" stroke="#1a7f4b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="splash-headline">Marking off in By Books</div>
+        <div class="splash-body">In By Books view, use the <strong>store dropdown</strong> on each book to select where you bought it. Choosing a store marks the book as found and credits that store as visited.</div>
+      </div>
+
+      <!-- Slide 5: Store completion -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="8" y="20" width="64" height="42" rx="8" fill="#EEF4A9" fill-opacity=".9"/>
+            <path d="M8 26c0-3.3 2.7-6 6-6h52c3.3 0 6 2.7 6 6v8H8v-8z" fill="#EEF4A9"/>
+            <line x1="18" y1="34" x2="18" y2="34" stroke="#5F6244" stroke-width="2"/>
+            <text x="22" y="36" fill="#5F6244" font-size="11" font-weight="700">Camino Books</text>
+            <circle cx="62" cy="33" r="7" fill="#1a7f4b"/>
+            <polyline points="58,33 61,36 67,29" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- confetti dots -->
+            <rect x="14" y="46" width="6" height="5" rx="1" fill="#E24B4A" transform="rotate(-20 17 48)"/>
+            <rect x="28" y="50" width="5" height="4" rx="1" fill="#1B1B1B" transform="rotate(15 30 52)"/>
+            <rect x="42" y="44" width="7" height="5" rx="1" fill="#EF9F27" transform="rotate(-10 45 46)"/>
+            <rect x="56" y="50" width="5" height="4" rx="1" fill="#639922" transform="rotate(25 58 52)"/>
+          </svg>
+        </div>
+        <div class="splash-headline">Store complete!</div>
+        <div class="splash-body">Once a store is visited — either by buying a book there or tapping the <strong>circle ○</strong> — the card turns <strong>lime green</strong> and confetti falls. The stores left count drops by one.</div>
+      </div>
+
+      <!-- Slide 6: Prizes -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <text x="12" y="52" font-size="28">🎖️</text>
+            <text x="40" y="52" font-size="28">📍</text>
+            <text x="28" y="28" font-size="28">🎉</text>
+          </svg>
+        </div>
+        <div class="splash-headline">Earn prizes!</div>
+        <div class="splash-body">
+          <div class="prize-list">
+            <div class="prize-row"><span class="prize-num">3</span><span>stores → <strong>Sticker</strong></span></div>
+            <div class="prize-row"><span class="prize-num">6</span><span>stores → <strong>Patch</strong></span></div>
+            <div class="prize-row"><span class="prize-num">9</span><span>stores → <strong>Pin</strong></span></div>
+            <div class="prize-row"><span class="prize-num">12</span><span>stores → <strong>Messenger Bag</strong></span></div>
+          </div>
+          <div class="prize-note">A toast notification will remind you when you hit each milestone.</div>
+        </div>
+      </div>
+
+      <!-- Slide 7: Let's go -->
+      <div class="splash-slide">
+        <div class="splash-icon">
+          <svg viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="40" r="38" fill="#EEF4A9" fill-opacity=".15" stroke="#EEF4A9" stroke-width="1.5"/>
+            <path d="M30 24l20 16-20 16" stroke="#EEF4A9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="splash-headline">You're ready!</div>
+        <div class="splash-body">Happy crawling!<br><br>Find helpful tips under <strong>ⓘ Tips</strong>, or replay this tutorial anytime through the <strong>menu</strong>.</div>
+        <button class="splash-cta" onclick="closeSplash()">Let's go!</button>
+      </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div class="splash-nav">
+      <div class="splash-dots" id="splash-dots"></div>
+      <button class="splash-next" id="splash-next-btn" onclick="splashNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Slide-out menu -->
+<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+<div class="menu-drawer" id="menu-drawer">
+  <div class="menu-header">
+    <div class="menu-title">Menu</div>
+    <button class="menu-close" onclick="closeMenu()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
+    </button>
+  </div>
+  <div class="menu-body">
+    <button class="menu-item" onclick="closeMenu();showHowTo()">
+      <span class="menu-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </span>
+      Tips
+    </button>
+    <button class="menu-item" onclick="replayTutorial()">
+      <span class="menu-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+      </span>
+      Watch tutorial
+    </button>
+  </div>
+</div>
+
+</body>
+</html>
