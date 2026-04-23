@@ -835,13 +835,16 @@ function applyFilter(){
         if(chev)chev.classList.add('open');
       }
     });
-    // only scroll if at least one store had matches
-    var hasMatches=orderedStores().some(s=>filterBooks(sortedBooksForStore(s.id)).length>0);
-    if(hasMatches){
-      setTimeout(function(){
-        const first=document.querySelector('.store-section');
-        if(first)first.scrollIntoView({behavior:'smooth',block:'start'});
-      },80);
+    // scroll to first store+book that matches
+    var firstMatchStore=null,firstMatchBook=null;
+    orderedStores().forEach(function(s){
+      if(!firstMatchStore){
+        var mb=filterBooks(sortedBooksForStore(s.id));
+        if(mb.length>0){firstMatchStore=s.id;firstMatchBook=mb[0].id;}
+      }
+    });
+    if(firstMatchStore){
+      setTimeout(function(){scrollToStoreBook(firstMatchStore,firstMatchBook);},120);
     }
   }
 }
@@ -1218,6 +1221,19 @@ document.addEventListener('touchstart',function(e){
     closeSearchPanel();
   }
 },{passive:true});
+
+
+function scrollToStoreBook(storeId, bookId){
+  var head=document.querySelector('.sticky-head');
+  var headH=head?head.offsetHeight:0;
+  var filterH=document.querySelector('.filter-chips')?document.querySelector('.filter-chips').offsetHeight:0;
+  var offset=headH+filterH+8;
+  var target=bookId?document.querySelector('[data-id="'+bookId+'"][data-store="'+storeId+'"]'):document.getElementById('store-'+storeId);
+  if(!target)target=document.getElementById('store-'+storeId);
+  if(!target)return;
+  var rect=target.getBoundingClientRect();
+  window.scrollBy({top:rect.top-offset,behavior:'smooth'});
+}
 
 // ── Confetti ──
 function launchConfetti(){
