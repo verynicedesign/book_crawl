@@ -284,7 +284,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;backgro
 .si-search-btn:active{opacity:.8}
 .si-call-btn{background:var(--cream);color:var(--ink);border:1.5px solid var(--ink-20)}
 
-.search-panel{position:absolute;left:0;right:0;top:100%;background:#fff;z-index:151;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--ink-10);padding-bottom:max(80px,env(safe-area-inset-bottom) + 60px)}
+.search-panel{position:absolute;left:0;right:0;top:100%;background:#fff;z-index:151;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--ink-10);padding-bottom:max(24px,env(safe-area-inset-bottom) + 12px);box-sizing:border-box}
 .sp-section-label{font-size:10px;font-weight:700;color:var(--ink-40);text-transform:uppercase;letter-spacing:.08em;padding:12px 20px 6px}
 .sp-my-list{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--ink-10)}
 .sp-my-list:active{background:var(--cream)}
@@ -1145,6 +1145,9 @@ function showSearchPanel(){
     '</div>'+
     '<div class="sp-section-label">Search a store’s catalog (inventory will vary)</div>'+
     storeRows;
+  // set height to fill viewport below the panel's top edge
+  var panelTop=panel.getBoundingClientRect().top;
+  panel.style.height=(window.innerHeight-panelTop)+'px';
   panel.style.display='block';
   panel.scrollTop=0;
   document.getElementById('search-backdrop').style.display='block';
@@ -1200,7 +1203,7 @@ function handleSearchKey(e){
   }
 }
 function closeSearchPanel(){
-  var p=document.getElementById('search-panel');p.style.display='none';
+  var p=document.getElementById('search-panel');p.style.display='none';p.style.height='';
   document.getElementById('search-backdrop').style.display='none';
   applyFilter();
 }
