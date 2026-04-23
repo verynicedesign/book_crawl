@@ -284,7 +284,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;backgro
 .si-search-btn:active{opacity:.8}
 .si-call-btn{background:var(--cream);color:var(--ink);border:1.5px solid var(--ink-20)}
 
-.search-panel{position:absolute;left:0;right:0;top:100%;background:#fff;z-index:151;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--ink-10);max-height:calc(100vh - 200px);padding-bottom:max(24px,env(safe-area-inset-bottom) + 12px)}
+.search-panel{position:absolute;left:0;right:0;top:100%;background:#fff;z-index:151;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-top:1px solid var(--ink-10);padding-bottom:max(80px,env(safe-area-inset-bottom) + 60px)}
 .sp-section-label{font-size:10px;font-weight:700;color:var(--ink-40);text-transform:uppercase;letter-spacing:.08em;padding:12px 20px 6px}
 .sp-my-list{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--ink-10)}
 .sp-my-list:active{background:var(--cream)}
@@ -476,7 +476,7 @@ const STORE_INFO={
   bluestocking:  {hours:"Sat. 10am-7pm, Sun. 10am-6pm, Mon. 11am-6pm",        phone:"(619) 296-1424",tel:"+16192961424",address:"3817 Fifth Ave., San Diego, CA 92103",searchUrl:null,callForInventory:true},
   verbatim:      {hours:"Sat. 10am-7pm, Sun. & Mon. 10am-6pm",                phone:"(619) 501-7466",tel:"+16195017466",address:"3793 30th St., San Diego, CA 92104",searchUrl:null,callForInventory:true},
   bookcatapult:  {hours:"Sat. 9am-7pm, Sun. & Mon. 10am-6pm",                 phone:"(619) 795-3780",tel:"+16197953780",address:"3010-B Juniper St., San Diego, CA 92104",searchUrl:"https://thebookcatapult.com/search?q="},
-  heybooks:      {hours:"Sat. & Sun. 9am-8pm, Mon. 10am-6pm",                 phone:"(619) 693-4462",tel:"+16196934462",address:"921 E St., San Diego, CA 92120",searchUrl:"https://www.heybooksorelse.com/search?q="},
+  heybooks:      {hours:"Sat. & Sun. 9am-8pm, Mon. 10am-6pm",                 phone:"(619) 693-4462",tel:"+16196934462",callForInventory:true,address:"921 E St., San Diego, CA 92120",searchUrl:null},
 };
 
 const DEFAULT_BOOKS=[];
