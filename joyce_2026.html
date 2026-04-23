@@ -835,13 +835,13 @@ function toggleStore(id){
 function setFilter(f){cf=f;document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f===f)c.classList.add('a-'+f);});render();}
 function applyFilter(){
   render();
-  const q=(document.getElementById('search').value||'').trim();
-  if(q){
-    const matches=filterBooks(books);
+  var sq=(document.getElementById('search').value||'').trim();
+  if(sq){
+    var matches=filterBooks(books);
     if(matches.length===0){
       var m=document.getElementById('no-results-modal');
       var msg=document.getElementById('no-results-msg');
-      if(msg)msg.textContent='“'+q+'” isn't on your list yet. Try searching a store's catalog to find it.';
+      if(msg)msg.textContent='“'+sq+'” isn't on your list yet. Try searching a store's catalog to find it.';
       if(m)m.style.display='flex';
     }
   }
