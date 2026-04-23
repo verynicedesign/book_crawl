@@ -341,6 +341,7 @@ select.s-found{border-color:var(--edit-bg)!important;color:var(--edit-bg)!import
   </button>
   </div>
 <div id="search-panel" class="search-panel" style="display:none"></div>
+<div id="no-results-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,.5)" onclick="this.style.display='none'"><div class="call-inv-card" onclick="event.stopPropagation()"><div class="call-inv-title">No results found</div><div class="call-inv-msg" id="no-results-msg">That title isn't on your list yet. Try searching a store's catalog to see if they carry it.</div><button class="call-inv-close" onclick="document.getElementById('no-results-modal').style.display='none'">Got it</button></div></div>
 <div id="call-inventory-modal" style="display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,.5)" onclick="this.style.display='none'"><div class="call-inv-card" onclick="event.stopPropagation()"><div class="call-inv-title">Call for inventory</div><div class="call-inv-msg">This store doesn't have an online catalog.<br>Give them a call to check availability!</div><a id="call-inv-link" href="" class="call-inv-phone"></a><button class="call-inv-close" onclick="document.getElementById('call-inventory-modal').style.display='none'">Close</button></div></div>
 </div>
 
@@ -834,6 +835,16 @@ function toggleStore(id){
 function setFilter(f){cf=f;document.querySelectorAll('.chip').forEach(c=>{c.className='chip';if(c.dataset.f===f)c.classList.add('a-'+f);});render();}
 function applyFilter(){
   render();
+  const q=(document.getElementById('search').value||'').trim();
+  if(q){
+    const matches=filterBooks(books);
+    if(matches.length===0){
+      var m=document.getElementById('no-results-modal');
+      var msg=document.getElementById('no-results-msg');
+      if(msg)msg.textContent='“'+q+'” isn't on your list yet. Try searching a store's catalog to find it.';
+      if(m)m.style.display='flex';
+    }
+  }
   if(currentView==='stores'){
     const q=(document.getElementById('search').value||'').toLowerCase();
     if(!q)return;
