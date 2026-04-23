@@ -835,11 +835,14 @@ function applyFilter(){
         if(chev)chev.classList.add('open');
       }
     });
-    // scroll to first matching store
-    setTimeout(function(){
-      const first=document.querySelector('.store-section');
-      if(first)first.scrollIntoView({behavior:'smooth',block:'start'});
-    },80);
+    // only scroll if at least one store had matches
+    var hasMatches=orderedStores().some(s=>filterBooks(sortedBooksForStore(s.id)).length>0);
+    if(hasMatches){
+      setTimeout(function(){
+        const first=document.querySelector('.store-section');
+        if(first)first.scrollIntoView({behavior:'smooth',block:'start'});
+      },80);
+    }
   }
 }
 function setSort(s){sortBy=s;save();renderBooksView();updateStats();}
@@ -1134,7 +1137,7 @@ function showSearchPanel(){
     '<div class="sp-top-row"><div class="sp-section-label" style="margin:0">Search</div><button class="sp-close-btn" onclick="closeSearchPanel()" aria-label="Close search">×</button></div>'+
     '<div class="sp-my-list" id="sp-my-list-btn">'+
       '<div class="sp-my-list-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#EEF4A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'+
-      '<div><div class="sp-my-list-text">My list'+qLabel+'</div>'+
+      '<div><div class="sp-my-list-text">'+(q?'Search my list for '+qLabel:'Search My List')+'</div>'+
       '<div class="sp-my-list-sub">Search within your saved books</div></div>'+
     '</div>'+
     '<div class="sp-section-label">Search a store’s catalog (inventory will vary)</div>'+
